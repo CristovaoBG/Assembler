@@ -29,9 +29,14 @@ int main(int argc, char *argv[]){
 
 void rodaPrograma(int tamanho, char *programa){
 	int i;
-	for(i=0; i<tamanho; i++){
-		putchar(programa[i]);
-	}
+	int pc = 0; //contador de programa
+	int acc = 0; //acumulador
+
+	//for(i=0; i<tamanho; i++){
+	//	putchar(programa[i]);
+	//}
+
+	
 }
 
 
