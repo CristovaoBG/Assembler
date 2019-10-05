@@ -34,6 +34,33 @@ void insereStringNaPosicao(char *strAlvo, char *str){ //insere str na posicao st
 	}
 }
 
+int apagaLinha(char *str){	//retorna tamanho da linha apagada
+	int tamanhoL = 0;
+	while (str[tamanhoL] != '\n') tamanhoL++;
+	tamanhoL++;
+	removeCaracteres(str,tamanhoL);
+	return tamanhoL;
+}
+
+void substituiEqu(char *string, char *rotuloStr, char *valorEquStr){ //substitui o valor de rotuloStr por valorEquStr na string
+
+	Token token;
+	int posicao = 0, posAnterior;
+	char tokenLido[100];
+	int tamanhoDoRotulo = strlen(rotuloStr);
+
+	while(string[posicao]!='\0'){
+		posAnterior = posicao;
+		posicao += token.leUmToken(string, posicao);
+		token.copiaTokenParaString(tokenLido);
+		if (strcmp(tokenLido,rotuloStr)==0){	//significa que sao iguais, enta substitui
+			removeCaracteres(string + posAnterior, tamanhoDoRotulo);
+			insereStringNaPosicao(string + posAnterior, valorEquStr);
+			posicao = posAnterior;
+		}
+	}
+}
+
 void criaListaDeTokens(char *string, int tamanho){
 	//printf(string);
 //	char *token, tokenString[50];
@@ -41,10 +68,8 @@ void criaListaDeTokens(char *string, int tamanho){
 //	Token token;
 	int posicao = 0, posicaoAuxiliar = 0;
 
-	insereStringNaPosicao(string+4, "meu pau juvenal");
-
 	ListaToken listaDeEqus;
-	Token token;
+	Token token, rotulo, valorEqu;
 	/*
 //	Token token, token1, token2, token3, token4;
 	strcpy(token1.string,"A ");
@@ -63,16 +88,15 @@ void criaListaDeTokens(char *string, int tamanho){
 	*/
 	printf("\n\n%s\n",string);
 	
+	//Processa os EQUs
 	while(string[posicao]!='\0'){
-//		posicao += token.leUmToken(string, posicao);
-//		continue;
-		//printf("c = CARACTERE:%c\n",string[posicao]);
-		//verifica se EQU
-		Token rotulo, valorEqu;
 		posicaoAuxiliar = posicao;	//grava posicao antes de verificar se eh equ
 		posicao += token.leUmToken(string, posicao);
 		//printf("\n\n");
-		while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO) posicao += token.leUmToken(string,posicao);	
+		while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO) {
+			posicaoAuxiliar = posicao;
+			posicao += token.leUmToken(string,posicao);	
+			}
 		//add na lista		
 		if (token.tipo == PALAVRA){
 			rotulo = token; //so faz sentido se houver dois pontos a seguir. mas ja assume que vai ter
@@ -94,15 +118,20 @@ void criaListaDeTokens(char *string, int tamanho){
 						char rotuloStr[100],valorEquStr[100];
 						rotulo.copiaTokenParaString(rotuloStr);
 						valorEqu.copiaTokenParaString(valorEquStr);
-						printf("estrutura de EQ correta. Rotulo: %s Valor: %s\n",rotuloStr,valorEquStr);		
-						//varre o texto substituindo
+						printf("estrutura de EQU encontrada. Rotulo: %s Valor: %s\n",rotuloStr,valorEquStr);		
+						//varre o texto substituindo os caracteres da string à frente
+						substituiEqu(string + posicao,rotuloStr,valorEquStr);
+						apagaLinha(string+posicaoAuxiliar);
+						posicao = posicaoAuxiliar;
 					}
 				}
 			}
 		}
-		//posicao++;
-		//getchar();
-		//break;
+	}
+	//processa IFs
+	while(string[posicao]!='\0'){
+		posicaoAuxiliar = posicao;
+		posicao += token.leUmToken(string, posicao);
 	}
 	printf("\n\n%s\n",string);
 
