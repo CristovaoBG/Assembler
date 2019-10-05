@@ -199,8 +199,6 @@ int main(int argc, char *argv[]){
 			programa[i]+= 'A' - 'a';
 		}
 	}
-
-
 	preProcessa(programa, tamanhoArquivo);
 	preProcessa(programa);
 	monta(programaPreProcessado);
