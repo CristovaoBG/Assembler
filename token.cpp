@@ -1,4 +1,102 @@
 #include "token.h"
+#include <string.h>
+struct Lista{
+	Token *token;
+	struct Lista *prox;
+};
+
+bool comparaDoisTokens(char * t1, char * t2, int tamanho){ //verdadeiro se sao iguais, falso se nao
+	int i;
+	for (i=0; i < tamanho; i++){
+		if (t1[i]!=t2[i]) {
+			return false;
+		}
+//			printf("caractere 1:%c  caractere 2:%c\n",t1[i],t2[i]);
+	}
+	return true;
+}
+
+void Token::copiaTokenParaString(char *destino){
+	int i;
+	for(i = 0; i<tamanho; i++){
+		destino[i] = posicaoAbsoluta[i];
+	}
+	destino[i] = '\0';
+}
+
+
+int descobreToken(char *inicioString, int tamanho){
+	int i, j;
+	//sao 19 tokens textuais conhecidos, o maior deles apresenta 7 caracteres + FIM_STR = 8 caractreres
+	char tokenStrings[19][8];
+	//limpa lixo de tokenStrings;
+	for (i = 0; i< 8; i++) for (j=0; j<19; j++)tokenStrings[i][j] = '\0';
+	
+	//define tabela de strings de tokens
+	strcpy(&tokenStrings[EQU][0],"EQU");
+	strcpy(&tokenStrings[IF][0],"IF");
+
+	if (tamanho > 8) return PALAVRA;	// se for maior que oito entao so pode ser uma palavra
+	
+//	printf("_____________%d__________\n",tamanho);
+	for (i=0; i<19; i++){
+		if (strlen(&tokenStrings[i][0]) == tamanho) {
+			if(comparaDoisTokens(inicioString, &tokenStrings[i][0], tamanho) == true) return i;	//retorna o índice do token
+		}
+	}
+	return PALAVRA;	 // se nenhum token foi encontrado
+}
+
+int Token::leUmToken(char *stringInput, int inicio){
+	posicao = inicio;
+	char c = stringInput[posicao];
+	tamanho = 0;
+	if (c>='A' && c<='Z' || c == '_'){	
+		//tipo texto -> podem suceder numeros
+		tamanho++;
+		c = stringInput[posicao];
+		while ((c>='A' && c<='Z' )||(c>='0' && c<='9' )|| c == '_'){
+			c = stringInput[posicao+(++tamanho)];
+		}
+		tipo = descobreToken(stringInput+inicio, tamanho);
+	}
+	else if (c>='0' && c<='9'){
+		while (c>='0' && c<='9' ){	//varre os proximos digitos pra saber tamanho
+			c = stringInput[posicao+(++tamanho)];
+		}
+		//c = stringInput[posicao+(++tamanho)];
+		tipo = NUMERO;		
+		//le numero e salva em valor
+	}
+	else {
+		switch(c){
+			case ' ':
+				tipo = ESPACO;
+				tamanho++;
+				break;
+			case '\n':
+				tipo = QUEBRA_DE_LINHA;
+				tamanho++;
+				break;
+			case ':':
+				tipo = DOIS_PONTOS;
+				tamanho++;
+				break;
+			case '\t':
+				tipo = TABULACAO;
+				tamanho++;
+				break;
+			default:
+				tipo = INVALIDO;
+				tamanho++;
+				printf("token invalido. ascii: %c, valor: %d\n",c,(int)c);
+		}
+	}
+	printf("ID DO TOKEN:%d POSICAO: %d TAMANHO: %d\n",tipo, posicao, tamanho);
+	posicaoAbsoluta = stringInput + posicao;
+	return tamanho;
+}
+
 
 ListaToken::ListaToken(){
 	cabeca = (Lista *) malloc(sizeof(Lista));
@@ -15,6 +113,15 @@ void ListaToken::add(Token token){
 	fim = fim->prox;
 	fim->prox = NULL;
 	fim->token = NULL;	
+}
+
+void ListaToken::printaTodos(){
+	Lista *c;
+	c = cabeca;
+	while (c!=NULL){
+		//if(c->token!=NULL) printf(c->token->string);
+		c = c->prox;
+	}
 }
 
 void ListaToken::liberaLista(Lista *c){

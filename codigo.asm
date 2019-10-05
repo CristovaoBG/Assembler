@@ -1,2 +1,1 @@
-this is a good strinhg
-this string is beautifull
+toda vez que eu te vejo eu tenho pensamentos impuros
