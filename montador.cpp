@@ -61,7 +61,7 @@ void substituiEqu(char *string, char *rotuloStr, char *valorEquStr){ //substitui
 	}
 }
 
-void criaListaDeTokens(char *string, int tamanho){
+void preProcessa(char *string, int tamanho){
 	//printf(string);
 //	char *token, tokenString[50];
 //	list<Token> tokenList;
@@ -92,7 +92,7 @@ void criaListaDeTokens(char *string, int tamanho){
 	while(string[posicao]!='\0'){
 		posicaoAuxiliar = posicao;	//grava posicao antes de verificar se eh equ
 		posicao += token.leUmToken(string, posicao);
-		//printf("\n\n");
+		//remove espacos desnecessarios.
 		while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO) {
 			posicaoAuxiliar = posicao;
 			posicao += token.leUmToken(string,posicao);	
@@ -129,9 +129,35 @@ void criaListaDeTokens(char *string, int tamanho){
 		}
 	}
 	//processa IFs
+	posicao = 0;
 	while(string[posicao]!='\0'){
-		posicaoAuxiliar = posicao;
+		posicaoAuxiliar = posicao;	//inicio do comando
 		posicao += token.leUmToken(string, posicao);
+		//tira espacos desnecessarios
+		while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO) {
+			posicaoAuxiliar = posicao;
+			posicao += token.leUmToken(string,posicao);
+			}
+		if (token.tipo == IF){
+			posicao += token.leUmToken(string,posicao);
+			while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO){
+				posicao += token.leUmToken(string,posicao);
+			}
+			if (token.tipo == NUMERO){
+				//estrutura IF usada corretamente
+				char ifValor[100];
+				token.copiaTokenParaString(ifValor);
+				//printf("tamanho: %d, valor = %d", strlen(ifValor),ifValor[0]);
+				if(strlen(ifValor)== 1 && ifValor[0] == '1'){ // se eh verdadeiro apaga so a linha do if
+					apagaLinha(string+posicaoAuxiliar);
+					posicao = posicaoAuxiliar;
+				}else{ //apaga linha atual e a seguinte
+					apagaLinha(string+posicaoAuxiliar);
+					posicao = posicaoAuxiliar;
+					apagaLinha(string+posicao);
+				}
+			}
+		}
 	}
 	printf("\n\n%s\n",string);
 
@@ -175,7 +201,7 @@ int main(int argc, char *argv[]){
 	}
 
 
-	criaListaDeTokens(programa, tamanhoArquivo);
+	preProcessa(programa, tamanhoArquivo);
 	preProcessa(programa);
 	monta(programaPreProcessado);
 	

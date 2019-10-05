@@ -1,8 +1,7 @@
-que: EQu 13
-o homem macaco que nao tem alma e nem coracao
-eu: eqU 100
-vejo: equ 2009
-
-toda: equ 234
-
-toda vez que eu te vejo eu tenho pensamentos impuros
+ola eu sou o chico cesar
+if 0
+dont put this in screen
+tudo certo tudo belEZA
+if 1
+essa voce poe na tela
+aqui e mais coisa
