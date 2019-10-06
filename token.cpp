@@ -1,5 +1,8 @@
 #include "token.h"
 #include <string.h>
+
+#define NUM_TOKENS 25
+
 struct Lista{
 	Token *token;
 	struct Lista *prox;
@@ -28,18 +31,19 @@ void Token::copiaTokenParaString(char *destino){
 int descobreToken(char *inicioString, int tamanho){
 	int i, j;
 	//sao 19 tokens textuais conhecidos, o maior deles apresenta 7 caracteres + FIM_STR = 8 caractreres
-	char tokenStrings[19][8];
+	char tokenStrings[NUM_TOKENS][8];
 	//limpa lixo de tokenStrings;
-	for (i = 0; i< 8; i++) for (j=0; j<19; j++)tokenStrings[i][j] = '\0';
+	for (i = 0; i< 8; i++) for (j=0; j<NUM_TOKENS; j++)tokenStrings[i][j] = '\0';
 	
 	//define tabela de strings de tokens
 	strcpy(&tokenStrings[EQU][0],"EQU");
 	strcpy(&tokenStrings[IF][0],"IF");
+	strcpy(&tokenStrings[ADD][0],"ADD");	
 
 	if (tamanho > 8) return PALAVRA;	// se for maior que oito entao so pode ser uma palavra
 	
 //	printf("_____________%d__________\n",tamanho);
-	for (i=0; i<19; i++){
+	for (i=0; i<NUM_TOKENS; i++){
 		if (strlen(&tokenStrings[i][0]) == tamanho) {
 			if(comparaDoisTokens(inicioString, &tokenStrings[i][0], tamanho) == true) return i;	//retorna o índice do token
 		}

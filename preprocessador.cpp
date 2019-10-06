@@ -2,7 +2,6 @@
 #include <string.h>
 #include "token.h"
 
-
 void removeCaracteres(char *string,int nCaracteres){ //remove o numero nCaracteres de caracteres na posicao de string 
 	int cursor = 0;
 	while (string[cursor + nCaracteres]!='\0'){
@@ -63,7 +62,7 @@ void preProcessa(char *string, int tamanho){
 //	Token token;
 	int posicao = 0, posicaoAuxiliar = 0, i;
 
-	ListaToken listaDeEqus;
+	//ListaToken listaDeEqus;
 	Token token, rotulo, valorEqu;
 	/*
 //	Token token, token1, token2, token3, token4;
