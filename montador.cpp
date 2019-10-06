@@ -5,7 +5,6 @@
 
 #define TAMANHO_MAXIMO_ARQUIVO 1024
 
-void preProcessa(char *);
 void monta(char *);
 
 void removeCaracteres(char *string,int nCaracteres){ //remove o numero nCaracteres de caracteres na posicao de string 
@@ -159,7 +158,7 @@ void preProcessa(char *string, int tamanho){
 			}
 		}
 	}
-	printf("\n\n%s\n",string);
+	printf("\nsegue:\n%s\n",string);
 
 }
 
@@ -190,28 +189,45 @@ int main(int argc, char *argv[]){
 	}
 	programa[--tamanhoArquivo] = 0;
 
-
 	fclose(file);
 	
+
 	//bota tudo em maiusculo
 	for(i=0; i<tamanhoArquivo; i++){
 		if(programa[i]>='a' && programa[i]<='z'){
 			programa[i]+= 'A' - 'a';
 		}
 	}
+
+	//remove comentarios
+	for(i=0; i<tamanhoArquivo; i++){
+		if (programa[i] == ';'){
+			programa[i] = '\n';
+			apagaLinha(programa+i+1);
+		}
+	}
+
+/*	//remove enters desnecessarios
+	while(programa[0]=='\n'){
+		removeCaracteres(programa,1);	//remove \n a frente
+	}
+	for(i=0; i<tamanhoArquivo; i++){
+		if (programa[i] == '\n'){
+			while(programa[i+1]=='\n'){
+				removeCaracteres(programa+i+1,1);	//remove \n a frente
+			}
+		}
+	}
+*/
+
 	preProcessa(programa, tamanhoArquivo);
-	preProcessa(programa);
-	monta(programaPreProcessado);
+//	processa(programa);
+	monta(programa);
 	
 	return 0;
 }
 
-
-void preProcessa(char *a){
-
-}
-
 void monta(char *a){
-
+	
 }
 

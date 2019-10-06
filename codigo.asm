@@ -1,7 +1,10 @@
-ola eu sou o chico cesar
-if 0
-dont put this in screen
-tudo certo tudo belEZA
-if 1
-essa voce poe na tela
-aqui e mais coisa
+l1: equ 1
+l2: equ 0
+section text
+if l1
+load space ;faz esta operacao se l1 for verdadeiro
+
+if l2
+input space ;faz esta operacao se l2 for verdadeiro
+section DATA
+n: SPACE
