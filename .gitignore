@@ -2,3 +2,5 @@
 *.o
 assembler
 simulador
+montador
+codigo.asm
