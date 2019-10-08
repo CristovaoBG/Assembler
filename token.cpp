@@ -60,8 +60,13 @@ int descobreToken(char *inicioString, int tamanho){
 	strcpy(&tokenStrings[INPUT][0],"INPUT");
 	strcpy(&tokenStrings[OUTPUT][0],"OUTPUT");
 	strcpy(&tokenStrings[STOP][0],"STOP");
+	strcpy(&tokenStrings[SECTION][0],"SECTION");
+	strcpy(&tokenStrings[SPACE][0],"SPACE");
+	strcpy(&tokenStrings[CONST][0],"CONST");
 	strcpy(&tokenStrings[EQU][0],"EQU");
 	strcpy(&tokenStrings[IF][0],"IF");
+	strcpy(&tokenStrings[DATA][0],"DATA");
+	strcpy(&tokenStrings[TEXT][0],"TEXT");
 
 	if (tamanho > 8) return PALAVRA;	// se for maior que oito entao so pode ser uma palavra
 	

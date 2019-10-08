@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <list>
 #include "token.h"
 #include "preprocessador.h"
 
@@ -50,17 +51,19 @@ typedef struct Simbolo{
 	int valor, isDef, lista;
 } TabelaSimbolos;
 
-
+typedef struct ListaTk{
+	int adicionarValor, posicaoProx;
+} ListaTk;
 
 void monta(char *texto, char *executavel){
-	Token token, operando, label;
+	Token token, operando, rotulo;
 	char buffer[100];
-	int posicao = 0, posicaoAuxiliar, valorToken, i;
+	int posicao = 0, posicaoAuxiliar, valorToken, i, j;
 	int cursorExecutavel = 0;
 	int programa[TAMANHO_MAXIMO_ARQUIVO];
 	bool naTabela = false;
-
-
+	
+	ListaTk lista;
 	Simbolo tabelaDeSimbolos[TAMANHO_MAX_TABELA_DE_SIMBOLOS];
 	int tamanhoTabela = 0;
 
@@ -76,19 +79,46 @@ void monta(char *texto, char *executavel){
 			posicaoAuxiliar = posicao;
 			posicao += token.leUmToken(texto,posicao);
 		}
-		if (token.tipo == PALAVRA){	//nesse caso acho que so pode ser declaracao de label
-			label = token;
+		if (token.tipo == PALAVRA){	//nesse caso acho que so pode ser declaracao de rotulo(label)
+			rotulo = token;
 			posicao += token.leUmToken(texto, posicao);
 			while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO) {
 				posicaoAuxiliar = posicao;
 				posicao += token.leUmToken(texto,posicao);
 			}
 			if(token.tipo == DOIS_PONTOS){
+				printf("TEM LABEL AQUI HUEAHUEA:\n");
 				//label declarada corretamente.
 				//vai na tabela de simbolos e procura, se nao tiver cria e define.
 				//se tiver entao define e varre a lista preenchendo o seu valor
 				//se tiver na lista e tiver definida é erro
-				
+				naTabela = false;
+				for(i = 0; i < tamanhoTabela; i++){
+					if(comparaTokens(rotulo,tabelaDeSimbolos[i].token)){
+						naTabela = true;
+						break;
+					}
+				}
+				//break;
+				if(!naTabela){	//se nao tiver na tabela, cria e define
+					tabelaDeSimbolos[tamanhoTabela].token = rotulo;
+					tabelaDeSimbolos[tamanhoTabela].isDef = true;
+					tabelaDeSimbolos[tamanhoTabela].lista = -1;
+					tabelaDeSimbolos[tamanhoTabela].valor = cursorExecutavel;
+					tamanhoTabela++;
+				}
+				else if(!tabelaDeSimbolos[i].isDef){	//se tiver na tabela varre a lista e define
+					printf(" E ELA TA NA TABELA DE SIMBOLOS UAU\n");					
+					tabelaDeSimbolos[i].isDef = true;
+					while(tabelaDeSimbolos[i].lista != -1){ //enquanto a lista nao acabar
+						j = tabelaDeSimbolos[i].lista;	// j = item da lista
+						tabelaDeSimbolos[i].lista = programa[j];	//tabela de simbolos vira item seguinte
+						programa[j] = cursorExecutavel;		//lista dispensada, atribui valor real na memoria
+					}
+					tabelaDeSimbolos[i].valor = cursorExecutavel;
+				}else{
+					// ERRO, DUPLA DEFINICAO
+				}
 			}
 		}
 		if (token.tipo >= ADD && token.tipo <= OUTPUT && token.tipo != COPY){	// sao todas as instruncoes com um operando
@@ -153,7 +183,42 @@ void monta(char *texto, char *executavel){
 		if (token.tipo == STOP){
 			programa[cursorExecutavel] = token.tipo;
 			cursorExecutavel++;
-			printf("!!!!!!!!!  %d  !!!!!!!!!!!!!!\n\n", token.tipo);
+			//printf("!!!!!!!!!  %d  !!!!!!!!!!!!!!\n\n", token.tipo);
+		}
+		if (token.tipo == SPACE){
+			//se for seguido de um numero n, escreve n zeros na memoria,
+			//se nao for seguido de nada, escreve um zero na memoria
+			posicao += token.leUmToken(texto, posicao);
+			while(token.tipo == ESPACO || token.tipo == TABULACAO) { //aqui ele nao ignora quebra de linha
+				posicaoAuxiliar = posicao;
+				posicao += token.leUmToken(texto,posicao);
+			}
+			if(token.tipo == NUMERO){
+				token.copiaTokenParaString(buffer);
+				i = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int	
+				for (j=0; j<i; j++){
+					//escreve 00 e incrementa programa
+					programa[cursorExecutavel] = 0;
+					cursorExecutavel++;
+				}
+			}
+			else{
+				programa[cursorExecutavel] = 0;
+				cursorExecutavel++;
+			}
+		}
+		if (token.tipo == CONST){
+			//le proximo token e escreve no programa
+			posicao += token.leUmToken(texto, posicao);
+			while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO) {
+				posicaoAuxiliar = posicao;
+				posicao += token.leUmToken(texto,posicao);
+			}
+			if (token.tipo == NUMERO){
+				token.copiaTokenParaString(buffer);
+				programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int	
+				cursorExecutavel++;
+			}
 		}
 	}
 
@@ -163,7 +228,7 @@ void monta(char *texto, char *executavel){
 		printf("token: %s isDef: %d lista: %d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista);
 	}
 	printf("\n\n"); 
-	for(int j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);
+	for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);
 	printf("\n");
 }
 
