@@ -24,11 +24,13 @@ enum token_enum{
 	STOP,
 	EQU,
 	IF,
+	VIRGULA,
 	TABULACAO,
 	QUEBRA_DE_LINHA,
 	NUMERO,
 	PALAVRA,		
 	DOIS_PONTOS,
+	FIM_DE_STR,
 	INVALIDO,		
 	TOTAL_DE_TOKENS,
 };
@@ -59,5 +61,7 @@ class ListaToken{
 	private:
 		Lista *cabeca, *cursor, *fim;
 };
+
+bool comparaTokens(Token t1, Token t2);
 
 #endif
