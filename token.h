@@ -7,27 +7,49 @@
 typedef struct Lista Lista;	//para uso interno
 
 enum token_enum{
-	EQU = 1,
+	ESPACO,
+	ADD,
+	SUB,
+	MULT,
+	DIV,
+	JMP,
+	JMPN,
+	JMPP,
+	JMPZ,
+	COPY,
+	LOAD,
+	STORE,
+	INPUT,
+	OUTPUT,
+	STOP,
+	SECTION,
+	SPACE,
+	CONST,
+	EQU,
 	IF,
-	ESPACO,			//3
+	DATA,
+	TEXT,
+	VIRGULA,
 	TABULACAO,
-	QUEBRA_DE_LINHA, //5
+	QUEBRA_DE_LINHA,
 	NUMERO,
-	PALAVRA,		//7
+	PALAVRA,		
 	DOIS_PONTOS,
-	INVALIDO,		//9
+	FIM_DE_STR,
+	INVALIDO,		
 	TOTAL_DE_TOKENS,
 };
 
 class Token {
 	public:
 		int tipo, 
-			tamanho, 
-			valor;	//caso seja numero
+			tamanho,	//tamanho da string que compoe o token
+			tamanhoInst, //quantos espacos a instrucao ocupa na memoria, se for instrucao
+			codigo;		// qual o codigo que representa essa instruncao em assembly
 
-		int posicao;			//posicao relativa ao inicio da string
-		int leUmToken(char *string, int posicao); //retorna tamanho do token
-		char* posicaoAbsoluta;	//posicao de inicio na memoria
+		int posicao;			//posicao do texto relativa ao inicio da string
+		int leUmToken(char *string, int posicao); //retorna tamanho textual do token
+		char* posicaoAbsoluta;	//posicao do texto referente ao inicio da memoria
 		void copiaTokenParaString(char *destino); 
 	};
 
@@ -44,5 +66,7 @@ class ListaToken{
 	private:
 		Lista *cabeca, *cursor, *fim;
 };
+
+bool comparaTokens(Token t1, Token t2);
 
 #endif

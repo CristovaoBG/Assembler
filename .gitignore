@@ -1,5 +1,6 @@
 *~
 *.o
+*.asm
 assembler
 simulador
 montador

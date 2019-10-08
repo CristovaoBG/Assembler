@@ -1,5 +1,8 @@
 #include "token.h"
 #include <string.h>
+
+#define NUM_TOKENS 30
+
 struct Lista{
 	Token *token;
 	struct Lista *prox;
@@ -24,22 +27,51 @@ void Token::copiaTokenParaString(char *destino){
 	destino[i] = '\0';
 }
 
+bool comparaTokens(Token t1, Token t2){
+	char str1[100],str2[100];
+	t1.copiaTokenParaString(str1);
+	t2.copiaTokenParaString(str2);
+	if (strcmp(str1,str2)==0){
+		return 1;
+	} else{
+		return 0;
+	}
+}
 
 int descobreToken(char *inicioString, int tamanho){
 	int i, j;
 	//sao 19 tokens textuais conhecidos, o maior deles apresenta 7 caracteres + FIM_STR = 8 caractreres
-	char tokenStrings[19][8];
+	char tokenStrings[NUM_TOKENS][8];
 	//limpa lixo de tokenStrings;
-	for (i = 0; i< 8; i++) for (j=0; j<19; j++)tokenStrings[i][j] = '\0';
+	for (i = 0; i< 8; i++) for (j=0; j<NUM_TOKENS; j++)tokenStrings[j][i] = '\0';
 	
 	//define tabela de strings de tokens
+	strcpy(&tokenStrings[ADD][0],"ADD");
+	strcpy(&tokenStrings[SUB][0],"SUB");
+	strcpy(&tokenStrings[MULT][0],"MULT");
+	strcpy(&tokenStrings[DIV][0],"DIV");
+	strcpy(&tokenStrings[JMP][0],"JMP");
+	strcpy(&tokenStrings[JMPN][0],"JMPN");
+	strcpy(&tokenStrings[JMPP][0],"JMPP");
+	strcpy(&tokenStrings[JMPZ][0],"JMPZ");
+	strcpy(&tokenStrings[COPY][0],"COPY");
+	strcpy(&tokenStrings[LOAD][0],"LOAD");
+	strcpy(&tokenStrings[STORE][0],"STORE");
+	strcpy(&tokenStrings[INPUT][0],"INPUT");
+	strcpy(&tokenStrings[OUTPUT][0],"OUTPUT");
+	strcpy(&tokenStrings[STOP][0],"STOP");
+	strcpy(&tokenStrings[SECTION][0],"SECTION");
+	strcpy(&tokenStrings[SPACE][0],"SPACE");
+	strcpy(&tokenStrings[CONST][0],"CONST");
 	strcpy(&tokenStrings[EQU][0],"EQU");
 	strcpy(&tokenStrings[IF][0],"IF");
+	strcpy(&tokenStrings[DATA][0],"DATA");
+	strcpy(&tokenStrings[TEXT][0],"TEXT");
 
 	if (tamanho > 8) return PALAVRA;	// se for maior que oito entao so pode ser uma palavra
 	
 //	printf("_____________%d__________\n",tamanho);
-	for (i=0; i<19; i++){
+	for (i=0; i<NUM_TOKENS; i++){
 		if (strlen(&tokenStrings[i][0]) == tamanho) {
 			if(comparaDoisTokens(inicioString, &tokenStrings[i][0], tamanho) == true) return i;	//retorna o índice do token
 		}
@@ -85,6 +117,13 @@ int Token::leUmToken(char *stringInput, int inicio){
 			case '\t':
 				tipo = TABULACAO;
 				tamanho++;
+				break;
+			case ',':
+				tipo = VIRGULA;
+				tamanho++;
+				break;
+			case '\0':
+				tipo = FIM_DE_STR;
 				break;
 			default:
 				tipo = INVALIDO;
