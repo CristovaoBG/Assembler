@@ -30,6 +30,7 @@ enum token_enum{
 	DATA,
 	TEXT,
 	VIRGULA,
+	MAIS,
 	TABULACAO,
 	QUEBRA_DE_LINHA,
 	NUMERO,

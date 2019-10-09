@@ -1,7 +1,7 @@
 #include "token.h"
 #include <string.h>
 
-#define NUM_TOKENS 30
+#define NUM_TOKENS 31
 
 struct Lista{
 	Token *token;
@@ -120,6 +120,10 @@ int Token::leUmToken(char *stringInput, int inicio){
 				break;
 			case ',':
 				tipo = VIRGULA;
+				tamanho++;
+				break;
+			case '+':
+				tipo = MAIS;
 				tamanho++;
 				break;
 			case '\0':

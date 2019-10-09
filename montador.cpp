@@ -45,15 +45,12 @@ int main(int argc, char *argv[]){
 	return 0;
 }
 
+
 typedef struct Simbolo{
 	//char string[100];		//texto do simbolo
 	Token token;
 	int valor, isDef, lista;
 } TabelaSimbolos;
-
-typedef struct ListaTk{
-	int adicionarValor, posicaoProx;
-} ListaTk;
 
 void monta(char *texto, char *executavel){
 	Token token, operando, rotulo;
@@ -62,10 +59,12 @@ void monta(char *texto, char *executavel){
 	int cursorExecutavel = 0;
 	int programa[TAMANHO_MAXIMO_ARQUIVO];
 	bool naTabela = false;
-	
-	ListaTk lista;
+
 	Simbolo tabelaDeSimbolos[TAMANHO_MAX_TABELA_DE_SIMBOLOS];
 	int tamanhoTabela = 0;
+
+	int adicionaAoEndereco[TAMANHO_MAXIMO_ARQUIVO];		//tabela que registra o numero NUMERO em LABEL+NUMERO a ser adicionado no final de todo o processo
+	for(i=0;i<TAMANHO_MAXIMO_ARQUIVO; i++) adicionaAoEndereco[i] = 0;
 
 	printf("AAAAAAAAAAA   %d    AAAAAAAAAA\n",(int)texto[58]);
 	for (i=55;i<60;i++)printf("%d ",(int)texto[i]);
@@ -87,7 +86,6 @@ void monta(char *texto, char *executavel){
 				posicao += token.leUmToken(texto,posicao);
 			}
 			if(token.tipo == DOIS_PONTOS){
-				printf("TEM LABEL AQUI HUEAHUEA:\n");
 				//label declarada corretamente.
 				//vai na tabela de simbolos e procura, se nao tiver cria e define.
 				//se tiver entao define e varre a lista preenchendo o seu valor
@@ -121,6 +119,7 @@ void monta(char *texto, char *executavel){
 				}
 			}
 		}
+		// ###########	INSTRUCOES DE UM OPERANDO	###########
 		if (token.tipo >= ADD && token.tipo <= OUTPUT && token.tipo != COPY){	// sao todas as instruncoes com um operando
 			operando = token;
 			posicao += token.leUmToken(texto,posicao);
@@ -178,8 +177,166 @@ void monta(char *texto, char *executavel){
 					cursorExecutavel++;
 					tamanhoTabela++;
 				}
+				// verifica se eh ...+NUMERO
+				posicao += token.leUmToken(texto,posicao);
+				if(token.tipo == MAIS){
+					//le numero a seguir e copia para a tabela adicionaAoEndereco na posicao do executavel
+					posicao += token.leUmToken(texto,posicao);
+					if (token.tipo == NUMERO){
+						token.copiaTokenParaString(buffer);
+						 adicionaAoEndereco[cursorExecutavel-1]= atoi(buffer);
+					}
+				}
 			}
 		}
+		// ###########	FIM INSTRUCOES DE UM OPERANDO	###########
+		// ###########	INSTRUCOES DE DOIS OPERANDOS (COPY)	###########
+		if (token.tipo == COPY){	// sao todas as instruncoes com um operando
+			operando = token;
+			posicao += token.leUmToken(texto,posicao);
+			while(token.tipo == ESPACO || token.tipo == TABULACAO) {	//ignora tabs e espacos entre instrucao e operando
+				posicao += token.leUmToken(texto,posicao);
+			}
+			if (token.tipo == NUMERO){
+				//insere instrucao e operando no programa executavel.
+				programa[cursorExecutavel] = operando.tipo;	//o tipo eh o proprio codigo pq eu fui esperto ou eu fui burro nao sei ainda
+				cursorExecutavel++;
+				token.copiaTokenParaString(buffer);
+				programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int
+				cursorExecutavel++;				
+				//prigrama[cursorExecutavel] = 
+			}else if (token.tipo == PALAVRA){
+				printf("eh palavra ok\n");
+				//verifica se simbolo existe na tabela de simbolo,
+				//se existir e tiver definida insere o valor no executavel
+				//se existir e nao tiver definida insere valor da posicao do programa atual na tabela de simbolos
+				// e insere o valor anterior na tabela de simbolos
+				//se nao existir, insere na tabela de simbolo com -1
+				token.copiaTokenParaString(buffer);
+				//verifica se esta na tabela
+				naTabela = false;
+				for(i=0; i<tamanhoTabela;i++){
+					if(comparaTokens(token,tabelaDeSimbolos[i].token)){
+						naTabela = true;
+						break;
+					}
+				}
+				if(naTabela){
+					if (tabelaDeSimbolos[i].isDef){
+						programa[cursorExecutavel] = operando.tipo;	//o tipo eh o proprio codigo pq eu fui esperto ou eu fui burro nao sei ainda
+						cursorExecutavel++;
+						programa[cursorExecutavel] = tabelaDeSimbolos[i].valor; // insere valor do label no executavel
+						cursorExecutavel++;	
+					}
+					else{	//se simbolo esta na tabela mas nao esta definido 
+						programa[cursorExecutavel] = operando.tipo;	//o tipo eh o proprio codigo pq eu fui esperto ou eu fui burro nao sei ainda
+						cursorExecutavel++;
+						// insere na lista
+						programa[cursorExecutavel] = tabelaDeSimbolos[i].lista;
+						tabelaDeSimbolos[i].lista = cursorExecutavel; // insere valor do label no executavel
+						cursorExecutavel++;	
+					}
+				}
+				else{	//se nao esta na tabela de simbolos
+					//insere na tabela de simbolos
+					programa[cursorExecutavel] = operando.tipo;
+					cursorExecutavel++;
+					tabelaDeSimbolos[tamanhoTabela].token = token;
+					tabelaDeSimbolos[tamanhoTabela].isDef = false;
+					tabelaDeSimbolos[tamanhoTabela].lista = cursorExecutavel;	//indica que eh o primeiro elemento da lista
+					programa[cursorExecutavel] = -1;
+					cursorExecutavel++;
+					tamanhoTabela++;
+				}
+				// verifica se eh ...+NUMERO
+				posicaoAuxiliar = posicao;
+				posicaoAuxiliar += token.leUmToken(texto,posicao);
+				if(token.tipo == MAIS){
+					//le numero (a seguir de posicaoAuxiliar) e copia para a tabela adicionaAoEndereco na posicao do executavel
+					posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
+					posicao = posicaoAuxiliar;
+					if (token.tipo == NUMERO){
+						token.copiaTokenParaString(buffer);
+						adicionaAoEndereco[cursorExecutavel-1]= atoi(buffer);
+						posicao = posicaoAuxiliar;
+					}
+					else{
+						//ERRO
+					}
+				}
+			}
+			//le virgula e segundo operando
+			posicao += token.leUmToken(texto,posicao);
+			if(token.tipo == VIRGULA){
+				posicao += token.leUmToken(texto,posicao);
+				//le numero ou label ou label+NUMERO
+				if (token.tipo == NUMERO){
+					//insere instrucao e operando no programa executavel.
+					programa[cursorExecutavel] = operando.tipo;	//o tipo eh o proprio codigo pq eu fui esperto ou eu fui burro nao sei ainda
+					cursorExecutavel++;
+					token.copiaTokenParaString(buffer);
+					programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int
+					cursorExecutavel++;				
+					//prigrama[cursorExecutavel] = 
+				}else if (token.tipo == PALAVRA){
+					printf("eh palavra ok\n");
+					//verifica se simbolo existe na tabela de simbolo,
+					//se existir e tiver definida insere o valor no executavel
+					//se existir e nao tiver definida insere valor da posicao do programa atual na tabela de simbolos
+					// e insere o valor anterior na tabela de simbolos
+					//se nao existir, insere na tabela de simbolo com -1
+					token.copiaTokenParaString(buffer);
+					//verifica se esta na tabela
+					naTabela = false;
+					for(i=0; i<tamanhoTabela;i++){
+						if(comparaTokens(token,tabelaDeSimbolos[i].token)){
+							naTabela = true;
+							break;
+						}
+					}
+					if(naTabela){
+						if (tabelaDeSimbolos[i].isDef){
+							programa[cursorExecutavel] = tabelaDeSimbolos[i].valor; // insere valor do label no executavel
+							cursorExecutavel++;	
+						}
+						else{	//se simbolo esta na tabela mas nao esta definido 
+							// insere na lista
+							programa[cursorExecutavel] = tabelaDeSimbolos[i].lista;
+							tabelaDeSimbolos[i].lista = cursorExecutavel; // insere valor do label no executavel
+							cursorExecutavel++;	
+						}
+					}
+					else{	//se nao esta na tabela de simbolos
+						//insere na tabela de simbolos
+						tabelaDeSimbolos[tamanhoTabela].token = token;
+						tabelaDeSimbolos[tamanhoTabela].isDef = false;
+						tabelaDeSimbolos[tamanhoTabela].lista = cursorExecutavel;	//indica que eh o primeiro elemento da lista
+						programa[cursorExecutavel] = -1;
+						cursorExecutavel++;
+						tamanhoTabela++;
+					}
+					// verifica se eh ...+NUMERO
+					posicaoAuxiliar = posicao;
+					posicaoAuxiliar += token.leUmToken(texto,posicao);
+					if(token.tipo == MAIS){
+						//le numero (a seguir de posicaoAuxiliar) e copia para a tabela adicionaAoEndereco na posicao do executavel
+						posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
+						posicao = posicaoAuxiliar;
+						if (token.tipo == NUMERO){
+							token.copiaTokenParaString(buffer);
+							adicionaAoEndereco[cursorExecutavel-1]= atoi(buffer);
+							posicao = posicaoAuxiliar;
+						}
+						else{
+							//ERRO
+						}
+					}
+				}
+			}else{
+				//ERRO
+			}
+		}
+		// ###########	FIM INSTRUCOES DE DOIS OPERANDOS	###########
 		if (token.tipo == STOP){
 			programa[cursorExecutavel] = token.tipo;
 			cursorExecutavel++;
@@ -220,6 +377,10 @@ void monta(char *texto, char *executavel){
 				cursorExecutavel++;
 			}
 		}
+	}
+	
+	for(i=0;i<TAMANHO_MAXIMO_ARQUIVO; i++) {
+		programa[i]+=adicionaAoEndereco[i];
 	}
 
 	printf("\n\nTABELA DE SIMBOLOS:\n");
