@@ -6,7 +6,7 @@
 
 typedef struct Lista Lista;	//para uso interno
 
-enum token_enum{
+enum token_enum{	// a posicao das instrucoes equivale ao codgo delas, portanto nao mudar a ordem das que tem codigo
 	ESPACO,
 	ADD,
 	SUB,
