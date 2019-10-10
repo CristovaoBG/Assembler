@@ -1,50 +1,6 @@
 #include <stdio.h>
-#include <string.h>
-#include <list>
 #include "token.h"
-#include "preprocessador.h"
-
-#define TAMANHO_MAXIMO_ARQUIVO 1024
-#define TAMANHO_MAX_TABELA_DE_SIMBOLOS 1024
-void monta(char *, char *);
-
-int main(int argc, char *argv[]){
-	int i;
-	//abre e carrega arquivo na memoria
-	if (argc != 2) {
-		printf("uso incorreto.\n");
-		return 0;
-		}
-
-	char programa[TAMANHO_MAXIMO_ARQUIVO],
-		 executavel[TAMANHO_MAXIMO_ARQUIVO];
-
-	int tamanhoArquivo = 0;
-	FILE *file = NULL;
-
-	file = fopen(argv[1],"r");
-	if (file == NULL){
-		printf("arquivo não encontrado\n");
-		return 0;
-	}
-
-	while (!feof(file) && tamanhoArquivo < TAMANHO_MAXIMO_ARQUIVO){
-		//printf ("%d", i);
-		fread(programa+tamanhoArquivo, sizeof(char), 1, file); 
-		tamanhoArquivo++;		
-	}
-	programa[--tamanhoArquivo] = 0;
-
-	fclose(file);
-
-	preProcessa(programa, tamanhoArquivo);
-	//gerar arquivo
-	monta(programa, executavel);
-
-	//gerar arquivo
-	return 0;
-}
-
+#include "montador.h"
 
 typedef struct Simbolo{
 	//char string[100];		//texto do simbolo
@@ -57,14 +13,14 @@ void monta(char *texto, char *executavel){
 	char buffer[100];
 	int posicao = 0, posicaoAuxiliar, valorToken, i, j;
 	int cursorExecutavel = 0;
-	int programa[TAMANHO_MAXIMO_ARQUIVO];
+	int programa[TAMANHO_MAX_ARQUIVO_EXECUTAVEL];
 	bool naTabela = false;
 
 	Simbolo tabelaDeSimbolos[TAMANHO_MAX_TABELA_DE_SIMBOLOS];
 	int tamanhoTabela = 0;
 
-	int adicionaAoEndereco[TAMANHO_MAXIMO_ARQUIVO];		//tabela que registra o numero NUMERO em LABEL+NUMERO a ser adicionado no final de todo o processo
-	for(i=0;i<TAMANHO_MAXIMO_ARQUIVO; i++) adicionaAoEndereco[i] = 0;
+	int adicionaAoEndereco[TAMANHO_MAX_ARQUIVO_EXECUTAVEL];		//tabela que registra o numero NUMERO em LABEL+NUMERO a ser adicionado no final de todo o processo
+	for(i=0;i<TAMANHO_MAX_ARQUIVO_EXECUTAVEL; i++) adicionaAoEndereco[i] = 0;
 
 	printf("AAAAAAAAAAA   %d    AAAAAAAAAA\n",(int)texto[58]);
 	for (i=55;i<60;i++)printf("%d ",(int)texto[i]);
@@ -379,7 +335,7 @@ void monta(char *texto, char *executavel){
 		}
 	}
 	
-	for(i=0;i<TAMANHO_MAXIMO_ARQUIVO; i++) {
+	for(i=0;i<TAMANHO_MAX_ARQUIVO_EXECUTAVEL; i++) {	//adiciona NUMERO ao valor de memoria em LABEL+NUMERO
 		programa[i]+=adicionaAoEndereco[i];
 	}
 
