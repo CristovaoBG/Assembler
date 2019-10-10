@@ -7,18 +7,17 @@
 
 #define TAMANHO_MAXIMO_ARQUIVO 1024
 
-void monta(char *, char *);
-
 int main(int argc, char *argv[]){
-	int i;
+	int i, tamanhoExecutavel;
+	char nomeBuffer[100];
 	//abre e carrega arquivo na memoria
 	if (argc != 2) {
 		printf("uso incorreto.\n");
 		return 0;
 		}
 
-	char programa[TAMANHO_MAXIMO_ARQUIVO],
-		 executavel[TAMANHO_MAXIMO_ARQUIVO];
+	char programa[TAMANHO_MAXIMO_ARQUIVO];
+	int	 executavel[TAMANHO_MAXIMO_ARQUIVO];
 
 	int tamanhoArquivo = 0;
 	FILE *file = NULL;
@@ -39,10 +38,28 @@ int main(int argc, char *argv[]){
 	fclose(file);
 
 	preProcessa(programa, tamanhoArquivo);
-	//gerar arquivo
-	monta(programa, executavel);
-
-	//gerar arquivo
+	//gera arquivo preprocessado
+	FILE *arquivoPreProcessado = NULL, *arquivoExecutavel = NULL;
+	//adiciona extensao ".pre"
+	strcpy(nomeBuffer, argv[1]);
+	for(i = strlen(nomeBuffer); nomeBuffer[i] != '.' && i>0; i--);	
+	if(i==0) i=strlen(nomeBuffer);
+	strcpy(nomeBuffer+i, ".pre");
+	//salva arquivo.pre
+	arquivoPreProcessado = fopen(nomeBuffer,"w");
+	fprintf(arquivoPreProcessado,"%s",programa);
+	//monta
+	tamanhoExecutavel = monta(programa, executavel);
+	//adiciona extensao ".obj"
+	strcpy(nomeBuffer, argv[1]);
+	for(i = strlen(nomeBuffer); nomeBuffer[i] != '.' && i>0; i--);	
+	if(i==0) i=strlen(nomeBuffer);
+	strcpy(nomeBuffer+i, ".obj");
+	//salva arquivo.obj
+	arquivoExecutavel = fopen(nomeBuffer,"w");
+	for(i = 0; i<tamanhoExecutavel; i++){
+		fprintf(arquivoExecutavel,"%d ",executavel[i]);
+	}
 	return 0;
 }
 

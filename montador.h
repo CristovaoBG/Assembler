@@ -4,6 +4,6 @@
 #define TAMANHO_MAX_TABELA_DE_SIMBOLOS 1024
 #define TAMANHO_MAX_ARQUIVO_EXECUTAVEL 1024	//em "words"
 
-void monta(char *texto, char *executavel);
+int monta(char *texto, int *executavel);	//retorna tamanho do executavel
 
 #endif

@@ -1,6 +1,12 @@
 # Assembler
 
-compilação:
-	para compilar simulador utilize o comando " $ make simulador "
-	e para utilizar utilize o comando " $ simulador [nomeDoArquivo] " para executar.
-	
+Compilar montador:
+	$ make
+Compilar simulador
+	$ make siulador
+
+Compilar e rodar um programa "exemplo.asm":
+	$ ./montador exemplo.asm
+	$ ./simulador exemplo.bin
+
+Além disso o programa "montador" gera um arquivo "exemplo.pre" correspondente ao original arquivo pré processado.

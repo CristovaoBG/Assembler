@@ -8,12 +8,12 @@ typedef struct Simbolo{
 	int valor, isDef, lista;
 } TabelaSimbolos;
 
-void monta(char *texto, char *executavel){
+int monta(char *texto, int *programa){
 	Token token, operando, rotulo;
 	char buffer[100];
 	int posicao = 0, posicaoAuxiliar, valorToken, i, j;
 	int cursorExecutavel = 0;
-	int programa[TAMANHO_MAX_ARQUIVO_EXECUTAVEL];
+//	int programa[TAMANHO_MAX_ARQUIVO_EXECUTAVEL];
 	bool naTabela = false;
 
 	Simbolo tabelaDeSimbolos[TAMANHO_MAX_TABELA_DE_SIMBOLOS];
@@ -347,6 +347,7 @@ void monta(char *texto, char *executavel){
 	printf("\n\n"); 
 	for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);
 	printf("\n");
+	return cursorExecutavel;
 }
 
 
