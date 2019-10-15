@@ -3,16 +3,16 @@
 #include "montador.h"
 //#include "erros.h"
 
-void erroSemantico(int linha){
-	printf("%d erro semantico\n", linha);
+void erroSemantico(Token *token,int *posicao){
+	printf("%d erro semantico\n", token->leLinhaAtual());
 }
 
-void erroSintatico(int linha){
-	printf("%d erro sintatico\n", linha);
+void erroSintatico(Token *token,int *posicao){
+	printf("%d erro sintatico, posicao %d\n", token->leLinhaAtual(), *posicao);
 }
 
-void erroLexico(int linha){
-	printf("%d erro lexico\n", linha);
+void erroLexico(Token *token,int *posicao){
+	printf("%d erro lexico\n", token->leLinhaAtual());
 }
 
 typedef struct Simbolo{
@@ -45,7 +45,10 @@ int monta(char *texto, int *programa){
 			posicao += token.leUmToken(texto,posicao);
 		}
 		if (token.tipo == INVALIDO){
-			erroLexico(token.leLinhaAtual());
+			erroLexico(&token,&posicao);
+			// vai para prox linmha e volta o loop
+			while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
+			continue;
 		}
 		if (token.tipo == SECTION){
 			posicao += token.leUmToken(texto,posicao);
@@ -59,7 +62,10 @@ int monta(char *texto, int *programa){
 
 			}
 			else{ //ERRO SECAO NAO RECONHECIDA
-				erroLexico(token.leLinhaAtual());	//TA CERTO ISSO?
+				erroLexico(&token,&posicao);	//TA CERTO ISSO?
+				// vai para prox linmha e volta o loop
+				while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
+				continue;
 			}
 		}
 		if (token.tipo == PALAVRA){	//nesse caso acho que so pode ser declaracao de rotulo(label)
@@ -86,8 +92,10 @@ int monta(char *texto, int *programa){
 					posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
 					while(token.tipo == ESPACO) posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
 					if(token.tipo == DOIS_PONTOS){ //dois rotulos na mesma linha! eh proibido por lei.
-						erroSintatico(token.leLinhaAtual());
+						erroSintatico(&token,&posicao);
 						//vai para a proxima linha;
+						while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
+						continue;
 					}			
 				}
 				token.atribuiContaLinha(i);
@@ -119,12 +127,18 @@ int monta(char *texto, int *programa){
 					tabelaDeSimbolos[i].valor = cursorExecutavel;
 				}else{
 					// ERRO, DUPLA DEFINICAO
-					erroSemantico(token.leLinhaAtual());
+					erroSemantico(&token,&posicao);
+					// vai para prox linmha e volta o loop
+					while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
+					continue;
 				}
 			}
 			else{
 				//erro, palavra solta aleatoria
-				erroSintatico(token.leLinhaAtual()); ///////////////// TA CERTO ISSO?							
+				erroSintatico(&token,&posicao); ///////////////// TA CERTO ISSO?	
+				// vai para prox linmha e volta o loop
+				while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
+				continue;						
 			}
 		}
 		// ###########	INSTRUCOES DE UM OPERANDO	###########
@@ -142,7 +156,8 @@ int monta(char *texto, int *programa){
 				programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int
 				if (operando.tipo == DIV && programa[cursorExecutavel] == 0){
 					//ERRO DE DIVISAO POR ZERO
-					erroSintatico(token.leLinhaAtual());
+					erroSintatico(&token,&posicao);
+					continue;
 				}
 				cursorExecutavel++;
 			}else if (token.tipo == PALAVRA){
@@ -199,9 +214,11 @@ int monta(char *texto, int *programa){
 					}
 				}
 			}
-			else if(token.tipo == QUEBRA_DE_LINHA){
+			else{
 				//ERRO
-				erroSintatico(token.leLinhaAtual());
+				erroSintatico(&token,&posicao);
+				continue;
+				// vai para prox linmha e volta o loop
 			}
 		}
 		// ###########	FIM INSTRUCOES DE UM OPERANDO	###########
@@ -277,16 +294,14 @@ int monta(char *texto, int *programa){
 					}
 					else{
 						//ERRO, somou com uma porcaria que nao eh numero
-						if (token.tipo == QUEBRA_DE_LINHA) erroSintatico(token.leLinhaAtual()-1);
-						else erroSintatico(token.leLinhaAtual());
-						// POSICAO = LE_TOKEN_ATE_QUEBRA_DE_LINHA(); //AQUI
-						// CONTINUE;
+						//if (token.tipo == QUEBRA_DE_LINHA) erroSintatico(token.leLinhaAtual()-1);
+						erroSintatico(&token,&posicao);
+						continue;
 					}
 				}
 			}
 			else{	//ERRO, NENHUM OPERANDO FORNECIDO
-				if (token.tipo == QUEBRA_DE_LINHA) erroSintatico(token.leLinhaAtual()-1);
-				else erroSintatico(token.leLinhaAtual());
+				erroSintatico(&token,&posicao);
 				continue;
 			}
 			//le virgula e segundo operando
@@ -354,19 +369,20 @@ int monta(char *texto, int *programa){
 						}
 						else{
 							//ERRO, somou com uma porcaria que nao eh numero
-							if (token.tipo == QUEBRA_DE_LINHA) erroSintatico(token.leLinhaAtual()-1);
-							else erroSintatico(token.leLinhaAtual());
+							erroSintatico(&token,&posicao);
+							continue;
 						}
 					}
 				}
 				else{	//ERRO nao encontrou um segundo argumento valido
-					if (token.tipo == QUEBRA_DE_LINHA) erroSintatico(token.leLinhaAtual()-1);
-					else erroSintatico(token.leLinhaAtual());
+					erroSintatico(&token,&posicao);
+					continue;
 				}
 			}
 			else{
 				//ERRO, nao achou virgula entre os argumentos
-				erroSintatico(token.leLinhaAtual());
+				erroSintatico(&token,&posicao);
+				continue;
 			}
 		}
 		// ###########	FIM INSTRUCOES DE DOIS OPERANDOS	###########
