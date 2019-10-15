@@ -52,6 +52,11 @@ class Token {
 		int leUmToken(char *string, int posicao); //retorna tamanho textual do token
 		char* posicaoAbsoluta;	//posicao do texto referente ao inicio da memoria
 		void copiaTokenParaString(char *destino); 
+		Token();
+		int leLinhaAtual();
+		void atribuiContaLinha(int valor);
+	private:
+		int contaLinha;
 	};
 
 class ListaToken{
