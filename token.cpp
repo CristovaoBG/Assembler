@@ -123,6 +123,7 @@ int Token::leUmToken(char *stringInput, int inicio){
 				tipo = QUEBRA_DE_LINHA;
 				contaLinha++;
 				tamanho++;
+				//printf("POSICAO: %d \n", posicao+tamanho);
 				break;
 			case ':':
 				tipo = DOIS_PONTOS;
@@ -145,6 +146,7 @@ int Token::leUmToken(char *stringInput, int inicio){
 				break;
 			default:
 				tipo = INVALIDO;
+				printf("%d erro lexico\n", contaLinha);
 				tamanho++;
 				//printf("token invalido. ascii: %c, valor: %d\n",c,(int)c);
 		}
