@@ -113,7 +113,7 @@ typedef struct Simbolo{
 } TabelaSimbolos;
 
 int monta(char *texto, int *programa){
-	Token token, operando, rotulo;
+	Token token, operando, rotulo, tokenAuxiliar;
 	char buffer[100];
 	int posicao = 0, posicaoAuxiliar, valorToken, i, j, contaLinha = 1;
 	int cursorExecutavel = 0;
@@ -168,6 +168,7 @@ int monta(char *texto, int *programa){
 				//se tiver na lista e tiver definida é erro
 
 				//verifica se segue outro rotulo, o que eh proibido por lei
+				tokenAuxiliar = token;
 				i = token.leLinhaAtual();
 				posicaoAuxiliar = posicao;
 				posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
@@ -176,13 +177,14 @@ int monta(char *texto, int *programa){
 					posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
 					while(token.tipo == ESPACO) posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
 					if(token.tipo == DOIS_PONTOS){ //dois rotulos na mesma linha! eh proibido por lei.
+						//ERRO, DOIS ROTULOS NA MESMA LINHA
 						//erroSintatico(&token,&posicao);
 						//vai para a proxima linha;
 						//while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
 						//continue;
 					}			
 				}
-				token.atribuiContaLinha(i);
+				token = tokenAuxiliar;
 
 				// procura
 				naTabela = false;
@@ -245,7 +247,7 @@ int monta(char *texto, int *programa){
 				}
 				cursorExecutavel++;
 			}else if (token.tipo == PALAVRA){
-				//printf("eh palavra ok\n");
+				printf("comando de um arg. tipo: %d\n", operando.tipo);
 				//verifica se simbolo existe na tabela de simbolo,
 				//se existir e tiver definida insere o valor no executavel
 				//se existir e nao tiver definida insere valor da posicao do programa atual na tabela de simbolos
