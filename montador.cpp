@@ -1,7 +1,14 @@
 #include <stdio.h>
 #include "token.h"
 #include "montador.h"
+#include <string.h>
 //#include "erros.h"
+
+#define TAMANHO_BUFFER_SECTION 1024
+
+int nLinhasText = 0, nLinhasData = 0;
+bool naoMuda = false;
+
 
 void erroSemantico(Token *token,int *posicao){
 	printf("%d erro semantico\n", token->leLinhaAtual());
@@ -9,6 +16,94 @@ void erroSemantico(Token *token,int *posicao){
 
 void erroSintatico(Token *token,int *posicao){
 	printf("%d erro sintatico, posicao %d\n", token->leLinhaAtual(), *posicao);
+}
+
+void reestruturaSections(char *texto){
+	char 	bufferText[TAMANHO_BUFFER_SECTION],
+			bufferData[TAMANHO_BUFFER_SECTION];
+	Token token, prevToken;
+	int posicao = 0, posicaoText = 0, posicaoData = 0, tamanhoData = 0;
+
+	printf("\n INICIO\n");
+
+/*	posicao += token.leUmToken(texto, posicao);
+	while(token.tipo != FIM_DE_STR){
+		posicao += token.leUmToken(texto, posicao);
+		printf("%d ", posicao);
+	}
+
+	printf("\n FIM\n");
+	posicao = 0;
+	token.atribuiContaLinha(0);
+*/
+	// remove \ns que estao no fim do arquivo por algum motivo
+	int i=0;
+	while(texto[i]!='\0') i++;
+	i--;
+	while(texto[i]=='\n'){
+		texto[i] = '\0';
+		i--;
+	}
+
+	return;
+	printf("REESTRUTURANDO:\n\n");
+
+	posicao += token.leUmToken(texto, posicao);
+	while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO){
+		posicao += token.leUmToken(texto, posicao);
+	}
+	if(token.tipo!=SECTION){
+		//ERRO SECAO INVALIDA
+		
+	}
+	else{
+		posicao += token.leUmToken(texto, posicao);
+		while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO){
+			posicao += token.leUmToken(texto, posicao);
+		}
+		if (token.tipo == TEXT){
+			naoMuda = true;
+		}
+		else if(token.tipo == DATA){
+			//le secao de dados ate encontrar sessao text
+			while(token.tipo != SECTION && token.tipo != FIM_DE_STR){
+				tamanhoData = posicao;	//quando sair deste loop vai conter o valor correto se tiver tudo certo.
+				nLinhasData = token.leLinhaAtual();
+				posicao += token.leUmToken(texto, posicao);
+			}
+			if(token.tipo == SECTION){
+				posicao += token.leUmToken(texto, posicao);
+				while(token.tipo == ESPACO || token.tipo == TABULACAO){
+					posicao += token.leUmToken(texto, posicao);
+				}
+				if(token.tipo == TEXT){
+					while(token.tipo != FIM_DE_STR){	// conta o total de linhas ate o fim do programa
+						prevToken = token;
+						posicao += token.leUmToken(texto, posicao);
+					}
+					strncpy(bufferData,texto,tamanhoData);
+					bufferData[tamanhoData] = '\0';
+					strcpy(bufferText,texto+tamanhoData);
+					strcpy(texto,bufferText);
+					while(texto[posicaoText]!='\0') posicaoText++;
+					nLinhasText = token.leLinhaAtual() - nLinhasData;
+					strcpy(texto+posicaoText,bufferData);
+				}	
+				else{
+					//ERRO SECAO DESCONHECIDA (NAO EH TEXT MAS PODE SER DATA, QUE JA FOI)
+				}			
+			}
+			else{	//ERRO SECAO DE TEXT AUSENTE
+			
+			}
+		}
+		else {
+			//ERRO SECAO NAO EH TEXT NEM DATA 
+		}
+	}
+	printf("aiosdjdaoisjdoasijd\n%s\nnLinhasData: %d, nLinhasText: %d, total de linhas: %d, prevToken: %d, posicao: %d\n",texto,nLinhasData, nLinhasText, token.leLinhaAtual(),prevToken.tipo,posicao);
+	
+	
 }
 
 typedef struct Simbolo{

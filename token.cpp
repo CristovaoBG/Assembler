@@ -123,7 +123,7 @@ int Token::leUmToken(char *stringInput, int inicio){
 				tipo = QUEBRA_DE_LINHA;
 				contaLinha++;
 				tamanho++;
-				//printf("POSICAO: %d \n", posicao+tamanho);
+				printf("POSICAO: %d \n", posicao+tamanho);
 				break;
 			case ':':
 				tipo = DOIS_PONTOS;
