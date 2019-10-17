@@ -9,9 +9,9 @@
 int nLinhasText = 0, nLinhasData = 0;
 bool ordemCorreta = false;
 
-int dizLinhaOriginal(Token token){
-	int linha, linhaOriginal;
-	linha = token.leLinhaAtual();
+int dizLinhaOriginal(int linha){
+	int  linhaOriginal;
+	//linha = token.leLinhaAtual();
 	if (!ordemCorreta){
 		if (linha>nLinhasText){	//significa que esta na secao data
 			linhaOriginal = linha - nLinhasText;
@@ -23,6 +23,7 @@ int dizLinhaOriginal(Token token){
 	else{
 		linhaOriginal = linha;
 	}
+	//printf("opa\n");
 	return linhaOriginal;
 }
 
@@ -30,16 +31,16 @@ int dizLinhaOriginal(Token token){
 //}
 
 void erroLexico(Token *token, int *posicao){
-	printf("%d erro lexico, posicao %d\n", dizLinhaOriginal(*token), *posicao);
+	printf("%d erro lexico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
 }
 
 void erroSemantico(Token *token,int *posicao){
-	printf("%d erro semantico\n", token->leLinhaAtual());
+	printf("%d erro sintatico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
 }
 
 void erroSintatico(Token *token,int *posicao){
 	//printf("%d erro sintatico, posicao %d\n", token->leLinhaAtual(), *posicao);
-	printf("%d erro sintatico, posicao %d\n", dizLinhaOriginal(*token), *posicao);
+	printf("%d erro sintatico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
 }
 
 void reestruturaSections(char *texto){
@@ -117,14 +118,16 @@ void reestruturaSections(char *texto){
 				}	
 				else{
 					//ERRO SECAO DESCONHECIDA (NAO EH TEXT MAS PODE SER DATA, QUE JA FOI)
+					erroSintatico(&token,&posicao);
 				}			
 			}
 			else{	//ERRO SECAO DE TEXT AUSENTE
-			
+				erroSemantico(&token,&posicao);
 			}
 		}
 		else {
-			//ERRO SECAO NAO EH TEXT NEM DATA 
+			//ERRO SECAO NAO EH TEXT NEM DATA
+			erroSemantico(&token,&posicao);
 		}
 	}
 	printf("aiosdjdaoisjdoasijd\n%s\nnLinhasData: %d, nLinhasText: %d, total de linhas: %d, prevToken: %d, posicao: %d\n",texto,nLinhasData, nLinhasText, token.leLinhaAtual(),prevToken.tipo,posicao);
@@ -135,12 +138,12 @@ void reestruturaSections(char *texto){
 typedef struct Simbolo{
 	//char string[100];		//texto do simbolo
 	Token token;
-	int valor, isDef, lista;
+	int valor, isDef, lista, definidoNaLinha;
 } TabelaSimbolos;
 
 int monta(char *texto, int *programa){
 	Token token, operando, rotulo, tokenAuxiliar;
-	char buffer[100];
+	char buffer[100], buffer2[100];
 	int posicao = 0, posicaoAuxiliar, valorToken, i, j, contaLinha = 1;
 	int cursorExecutavel = 0;
 //	int programa[TAMANHO_MAX_ARQUIVO_EXECUTAVEL];
@@ -172,8 +175,8 @@ int monta(char *texto, int *programa){
 			else if(token.tipo == DATA){
 
 			}
-			else{ //ERRO SECAO NAO RECONHECIDA
-				//erroLexico(&token,&posicao);	//TA CERTO ISSO?
+			else{ //ERRO SECAO NAO RECONHECIDA (JA FOI DADO ESSE ERRO NO DE CIMA)
+				//erroSintatico(&token,&posicao);	//TA CERTO ISSO?
 				// vai para prox linmha e volta o loop
 				//while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
 				//continue;
@@ -226,6 +229,7 @@ int monta(char *texto, int *programa){
 					tabelaDeSimbolos[tamanhoTabela].lista = -1;
 					tabelaDeSimbolos[tamanhoTabela].valor = cursorExecutavel;
 					tamanhoTabela++;
+					tabelaDeSimbolos[tamanhoTabela].definidoNaLinha = dizLinhaOriginal(token.leLinhaAtual());
 				}
 				else if(!tabelaDeSimbolos[i].isDef){	//se tiver na tabela varre a lista e define
 					//printf(" E ELA TA NA TABELA DE SIMBOLOS UAU\n");					
@@ -238,7 +242,7 @@ int monta(char *texto, int *programa){
 					tabelaDeSimbolos[i].valor = cursorExecutavel;
 				}else{
 					// ERRO, DUPLA DEFINICAO
-					//erroSemantico(&token,&posicao);
+					erroSemantico(&token,&posicao);
 					// vai para prox linmha e volta o loop
 					//while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
 					//continue;
@@ -246,7 +250,7 @@ int monta(char *texto, int *programa){
 			}
 			else{
 				//erro, palavra solta aleatoria
-				//erroSintatico(&token,&posicao); ///////////////// TA CERTO ISSO?	
+				erroSintatico(&token,&posicao); ///////////////// TA CERTO ISSO?	
 				// vai para prox linmha e volta o loop
 				//while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
 				//continue;						
@@ -267,7 +271,7 @@ int monta(char *texto, int *programa){
 				programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int
 				if (operando.tipo == DIV && programa[cursorExecutavel] == 0){
 					//ERRO DE DIVISAO POR ZERO
-					//erroSintatico(&token,&posicao);
+					erroSintatico(&token,&posicao);
 					//continue;
 				}
 				cursorExecutavel++;
@@ -327,7 +331,9 @@ int monta(char *texto, int *programa){
 			}
 			else{
 				//ERRO
-				//erroSintatico(&token,&posicao);
+				erroSintatico(&token,&posicao);
+				while (texto[posicao] != '\n') posicao++;
+				
 				//continue;
 				// vai para prox linmha e volta o loop
 			}
@@ -564,9 +570,26 @@ int monta(char *texto, int *programa){
 
 	//verifica se todos os simbolos da tabela de simbolos foram definidos
 
+	for(i=0; i< tamanhoTabela; i++){
+		if (!tabelaDeSimbolos[i].isDef){
+			token.atribuiContaLinha(1);
+			posicao = 0;
+			//varre arquivo de texto imprimindo as posicoes onde o rotulo nao definido foi usado
+			do {				
+				posicao+=token.leUmToken(texto,posicao);
+				if(tabelaDeSimbolos[i].token.comparaToken(token)){
+					erroSintatico(&token,&posicao);
+				}
+			}while(token.tipo != FIM_DE_STR);
+		}
+	}
+	printf("\n%d",tamanhoTabela);
+
 	printf("\n\n"); 
 	for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);
 	printf("\n");
+
+
 	return cursorExecutavel;
 }
 

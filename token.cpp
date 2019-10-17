@@ -20,6 +20,15 @@ bool comparaDoisTokens(char * t1, char * t2, int tamanho){ //verdadeiro se sao i
 	return true;
 }
 
+bool Token::comparaToken(Token token){
+	char buffer1[100], buffer2[100];
+	copiaTokenParaString(buffer1);
+	token.copiaTokenParaString(buffer2);
+	//printf(" %d |",!strcmp(buffer1,buffer2));
+	return !strcmp(buffer1,buffer2);
+	
+}
+
 Token::Token(){
 	contaLinha = 1;
 }
@@ -124,7 +133,8 @@ int Token::leUmToken(char *stringInput, int inicio){
 				tipo = QUEBRA_DE_LINHA;
 				contaLinha++;
 				tamanho++;
-				printf("POSICAO: %d \n", posicao+tamanho);
+				//printf("POSICAO: %d \n", dizLinhaOriginal(posicao+tamanho));
+				
 				break;
 			case ':':
 				tipo = DOIS_PONTOS;
@@ -147,7 +157,7 @@ int Token::leUmToken(char *stringInput, int inicio){
 				break;
 			default:
 				tipo = INVALIDO;
-				printf("%d erro lexico\n", contaLinha);
+				printf("%d erro lexico\n", dizLinhaOriginal(contaLinha));
 				tamanho++;
 				//printf("token invalido. ascii: %c, valor: %d\n",c,(int)c);
 		}
