@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
 	arquivoPreProcessado = fopen(nomeBuffer,"w");
 	fprintf(arquivoPreProcessado,"%s",programa);
 	//restrutura na forma SECTION TEXT seguida de SECTION DATA
-	//reestruturaSections(programa);
+	reestruturaSections(programa);
 	//monta
 	tamanhoExecutavel = monta(programa, executavel);
 	//adiciona extensao ".obj"

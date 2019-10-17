@@ -1,4 +1,5 @@
 #include "token.h"
+#include "montador.h"
 #include <string.h>
 
 #define NUM_TOKENS 31

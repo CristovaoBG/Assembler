@@ -7,15 +7,39 @@
 #define TAMANHO_BUFFER_SECTION 1024
 
 int nLinhasText = 0, nLinhasData = 0;
-bool naoMuda = false;
+bool ordemCorreta = false;
 
+int dizLinhaOriginal(Token token){
+	int linha, linhaOriginal;
+	linha = token.leLinhaAtual();
+	if (!ordemCorreta){
+		if (linha>nLinhasText){	//significa que esta na secao data
+			linhaOriginal = linha - nLinhasText;
+		}
+		else{					//significa que esta na secao text
+			linhaOriginal = linha + nLinhasData;
+		}
+	}
+	else{
+		linhaOriginal = linha;
+	}
+	return linhaOriginal;
+}
+
+//bool verificaSeEhSecaoText(int linha){	//se nao for, significa que eh data
+//}
+
+void erroLexico(Token *token, int *posicao){
+	printf("%d erro lexico, posicao %d\n", dizLinhaOriginal(*token), *posicao);
+}
 
 void erroSemantico(Token *token,int *posicao){
 	printf("%d erro semantico\n", token->leLinhaAtual());
 }
 
 void erroSintatico(Token *token,int *posicao){
-	printf("%d erro sintatico, posicao %d\n", token->leLinhaAtual(), *posicao);
+	//printf("%d erro sintatico, posicao %d\n", token->leLinhaAtual(), *posicao);
+	printf("%d erro sintatico, posicao %d\n", dizLinhaOriginal(*token), *posicao);
 }
 
 void reestruturaSections(char *texto){
@@ -44,8 +68,8 @@ void reestruturaSections(char *texto){
 		texto[i] = '\0';
 		i--;
 	}
-
-	return;
+	//texto[++i] = '\n';
+	//texto[++i] = '\0';
 	printf("REESTRUTURANDO:\n\n");
 
 	posicao += token.leUmToken(texto, posicao);
@@ -62,7 +86,7 @@ void reestruturaSections(char *texto){
 			posicao += token.leUmToken(texto, posicao);
 		}
 		if (token.tipo == TEXT){
-			naoMuda = true;
+			ordemCorreta = true;
 		}
 		else if(token.tipo == DATA){
 			//le secao de dados ate encontrar sessao text
@@ -72,6 +96,7 @@ void reestruturaSections(char *texto){
 				posicao += token.leUmToken(texto, posicao);
 			}
 			if(token.tipo == SECTION){
+				nLinhasData--;	// nao tenho certeza pq
 				posicao += token.leUmToken(texto, posicao);
 				while(token.tipo == ESPACO || token.tipo == TABULACAO){
 					posicao += token.leUmToken(texto, posicao);
@@ -86,6 +111,7 @@ void reestruturaSections(char *texto){
 					strcpy(bufferText,texto+tamanhoData);
 					strcpy(texto,bufferText);
 					while(texto[posicaoText]!='\0') posicaoText++;
+					texto[posicaoText++]='\n';
 					nLinhasText = token.leLinhaAtual() - nLinhasData;
 					strcpy(texto+posicaoText,bufferData);
 				}	
@@ -169,7 +195,6 @@ int monta(char *texto, int *programa){
 
 				//verifica se segue outro rotulo, o que eh proibido por lei
 				tokenAuxiliar = token;
-				i = token.leLinhaAtual();
 				posicaoAuxiliar = posicao;
 				posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
 				while(token.tipo == ESPACO) posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
@@ -178,7 +203,7 @@ int monta(char *texto, int *programa){
 					while(token.tipo == ESPACO) posicaoAuxiliar += token.leUmToken(texto,posicaoAuxiliar);
 					if(token.tipo == DOIS_PONTOS){ //dois rotulos na mesma linha! eh proibido por lei.
 						//ERRO, DOIS ROTULOS NA MESMA LINHA
-						//erroSintatico(&token,&posicao);
+						erroSintatico(&token,&posicao);
 						//vai para a proxima linha;
 						//while (texto[posicao]!= '\n' && texto[posicao]!= '\0') posicao ++;
 						//continue;
@@ -247,7 +272,7 @@ int monta(char *texto, int *programa){
 				}
 				cursorExecutavel++;
 			}else if (token.tipo == PALAVRA){
-				printf("comando de um arg. tipo: %d\n", operando.tipo);
+				//printf("comando de um arg. tipo: %d\n", operando.tipo);
 				//verifica se simbolo existe na tabela de simbolo,
 				//se existir e tiver definida insere o valor no executavel
 				//se existir e nao tiver definida insere valor da posicao do programa atual na tabela de simbolos
