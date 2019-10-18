@@ -37,7 +37,7 @@ void erroLexico(Token *token, int *posicao){
 }
 
 void erroSemantico(Token *token,int *posicao){
-	printf("%d erro sintatico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
+	printf("%d erro semantico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
 }
 
 void erroSintatico(Token *token,int *posicao){
@@ -145,7 +145,7 @@ void reestruturaSections(char *texto){
 typedef struct Simbolo{
 	//char string[100];		//texto do simbolo
 	Token token;
-	int valor, isDef, lista, definidoNaLinha;
+	int valor, isDef, lista, definidoNaLinha, isConst, isConst0;
 } TabelaSimbolos;
 
 int monta(char *texto, int *programa){
@@ -190,6 +190,7 @@ int monta(char *texto, int *programa){
 			}
 		}
 		if (token.tipo == PALAVRA){	//nesse caso acho que so pode ser declaracao de rotulo(label)
+
 			rotulo = token;
 			posicao += token.leUmToken(texto, posicao);
 			while(token.tipo == ESPACO || token.tipo == TABULACAO) {
@@ -197,6 +198,7 @@ int monta(char *texto, int *programa){
 				posicao += token.leUmToken(texto,posicao);
 			}
 			if(token.tipo == DOIS_PONTOS){
+
 				//label declarada corretamente.
 				//verifica se segue outro rotulo, o que eh proibido.
 				//vai na tabela de simbolos e procura, se nao tiver cria e define.
@@ -229,14 +231,32 @@ int monta(char *texto, int *programa){
 						break;
 					}
 				}
-				//break;
 				if(!naTabela){	//se nao tiver na tabela, cria e define
 					tabelaDeSimbolos[tamanhoTabela].token = rotulo;
 					tabelaDeSimbolos[tamanhoTabela].isDef = true;
 					tabelaDeSimbolos[tamanhoTabela].lista = -1;
 					tabelaDeSimbolos[tamanhoTabela].valor = cursorExecutavel;
+					tabelaDeSimbolos[tamanhoTabela].definidoNaLinha = token.leLinhaAtual();
+					//verifica se eh const
+					tokenAuxiliar = token;
+					posicaoAuxiliar = posicao;
+					do{
+						posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+					}while(tokenAuxiliar.tipo == ESPACO || tokenAuxiliar.tipo == QUEBRA_DE_LINHA);
+					if (tokenAuxiliar.tipo == CONST){
+						tabelaDeSimbolos[tamanhoTabela].isConst = true;
+						// verifica se eh 0
+						do{
+							posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+						}while(tokenAuxiliar.tipo == ESPACO || tokenAuxiliar.tipo == QUEBRA_DE_LINHA);	
+						tokenAuxiliar.copiaTokenParaString(buffer);
+						if (atoi(buffer) == 0) tabelaDeSimbolos[tamanhoTabela].isConst0 = true;
+						else tabelaDeSimbolos[tamanhoTabela].isConst0 = false;
+					}
+					else{
+						tabelaDeSimbolos[tamanhoTabela].isConst = false;
+					}
 					tamanhoTabela++;
-					tabelaDeSimbolos[tamanhoTabela].definidoNaLinha = dizLinhaOriginal(token.leLinhaAtual());
 				}
 				else if(!tabelaDeSimbolos[i].isDef){	//se tiver na tabela varre a lista e define
 					//printf(" E ELA TA NA TABELA DE SIMBOLOS UAU\n");					
@@ -246,7 +266,29 @@ int monta(char *texto, int *programa){
 						tabelaDeSimbolos[i].lista = programa[j];	//tabela de simbolos vira item seguinte
 						programa[j] = cursorExecutavel;		//lista dispensada, atribui valor real na memoria
 					}
+					// a partir daqui i eh o indice do simbolo em questao
 					tabelaDeSimbolos[i].valor = cursorExecutavel;
+					tabelaDeSimbolos[i].definidoNaLinha = token.leLinhaAtual();
+					//verifica se eh const
+					tokenAuxiliar = token;
+					posicaoAuxiliar = posicao;
+					do{
+						posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+					}while(tokenAuxiliar.tipo == ESPACO || tokenAuxiliar.tipo == QUEBRA_DE_LINHA);
+					//tabelaDeSimbolos[i].isConst = token.tipo == CONST? true : false;
+					if (tokenAuxiliar.tipo == CONST){
+						tabelaDeSimbolos[i].isConst = true;
+						do{
+							posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+						}while(tokenAuxiliar.tipo == ESPACO || tokenAuxiliar.tipo == QUEBRA_DE_LINHA);	
+						tokenAuxiliar.copiaTokenParaString(buffer);
+						if (atoi(buffer) == 0) tabelaDeSimbolos[i].isConst0 = true;
+						else tabelaDeSimbolos[i].isConst0 = false;
+					}
+					else{
+						tabelaDeSimbolos[i].isConst = false;
+					}
+					
 				}else{
 					// ERRO, DUPLA DEFINICAO
 					erroSemantico(&token,&posicao);
@@ -276,11 +318,11 @@ int monta(char *texto, int *programa){
 				cursorExecutavel++;
 				token.copiaTokenParaString(buffer);
 				programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int
-				if (operando.tipo == DIV && programa[cursorExecutavel] == 0){
-					//ERRO DE DIVISAO POR ZERO
-					erroSintatico(&token,&posicao);
+				//if (operando.tipo == DIV && programa[cursorExecutavel] == 0){
+					//ERRO DE DIVISAO POR ZERO (TA ERRADO, EH SE FOR CTT)
+					//erroSintatico(&token,&posicao);
 					//continue;
-				}
+				//}
 				cursorExecutavel++;
 			}else if (token.tipo == PALAVRA){
 				//printf("comando de um arg. tipo: %d\n", operando.tipo);
@@ -339,6 +381,7 @@ int monta(char *texto, int *programa){
 			else{
 				//ERRO
 				erroSintatico(&token,&posicao);
+				//printf("---token: %d---", token.tipo);
 				while (texto[posicao] != '\n') posicao++;
 				
 				//continue;
@@ -571,7 +614,7 @@ int monta(char *texto, int *programa){
 	printf("\n\nTABELA DE SIMBOLOS:\n");
 	for(i=0;i<tamanhoTabela;i++){
 		tabelaDeSimbolos[i].token.copiaTokenParaString(buffer);
-		printf("token: %s isDef: %d lista: %d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista);
+		printf("token: %s isDef: %d lista: %d defNaLinha: %d isConst:%d isCt0 %d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista,tabelaDeSimbolos[i].definidoNaLinha,tabelaDeSimbolos[i].isConst,tabelaDeSimbolos[i].isConst0);
 		
 	}
 
@@ -590,7 +633,77 @@ int monta(char *texto, int *programa){
 			}while(token.tipo != FIM_DE_STR);
 		}
 	}
-	printf("\n%d",tamanhoTabela);
+
+	//verifica se ha saltos para secoes invalidas
+	token.atribuiContaLinha(1);
+	posicao = 0;
+	do {				
+		posicao+=token.leUmToken(texto,posicao);
+		if (token.tipo >= JMP && token.tipo <= JMPZ){
+			do {				
+				posicao+=token.leUmToken(texto,posicao);
+			} while(token.tipo == ESPACO || token.tipo == TABULACAO);
+			//varre toda a tabela, compara e ve se ta saltando pra secao errada
+			for(i=0;i<tamanhoTabela;i++){
+				if(tabelaDeSimbolos[i].token.comparaToken(token)){
+					//ve se ta saltando pra secao boa
+					if (tabelaDeSimbolos[i].definidoNaLinha > nLinhasText){
+						//ERRO, SALTO PARA SECAO INVALIDA
+						erroSemantico(&token,&posicao);
+					}
+				}
+			}
+		}
+		// verifica se ha modificacao de constantes
+		else if (token.tipo == STORE){
+			do {			
+				posicao+=token.leUmToken(texto,posicao);
+			} while(token.tipo == ESPACO || token.tipo == TABULACAO);
+			//varre toda a tabela, compara e ve se ta alterando valor de ctt
+			for(i=0;i<tamanhoTabela;i++){
+				if(tabelaDeSimbolos[i].token.comparaToken(token)){
+					//ve se ta saltando pra secao boa
+					if (tabelaDeSimbolos[i].isConst){
+						//ERRO, SALTO PARA SECAO INVALIDA
+						erroSemantico(&token,&posicao);
+					}
+				}
+			}
+		}
+		else if (token.tipo == COPY){
+			do {			
+				posicao+=token.leUmToken(texto,posicao);
+			} while(token.tipo == ESPACO || token.tipo == TABULACAO);
+			posicao+=token.leUmToken(texto,posicao); //le virgula
+			//varre toda a tabela, compara e ve se ta alterando valor de ctt
+			if(token.tipo == VIRGULA){
+				posicao+=token.leUmToken(texto,posicao);			
+				for(i=0;i<tamanhoTabela;i++){
+					if(tabelaDeSimbolos[i].token.comparaToken(token)){
+						if (tabelaDeSimbolos[i].isConst){
+							//ta maluco? ta tentando alterar const o que eh proibido por lei
+							erroSemantico(&token,&posicao);
+						}
+					}
+				}
+			}
+		}
+		else if (token.tipo == DIV){
+			do {			
+				posicao+=token.leUmToken(texto,posicao);
+			} while(token.tipo == ESPACO || token.tipo == TABULACAO);
+			for(i=0;i<tamanhoTabela;i++){
+				if(tabelaDeSimbolos[i].token.comparaToken(token)){
+					if (tabelaDeSimbolos[i].isConst0){
+						//ERRO, Divisao por zero aqui nao
+						erroSemantico(&token,&posicao);
+					}
+				}
+			}
+			
+		}
+	}while(token.tipo != FIM_DE_STR);
+	
 
 	printf("\n\n"); 
 	for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);

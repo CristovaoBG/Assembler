@@ -162,7 +162,7 @@ int Token::leUmToken(char *stringInput, int inicio){
 				//printf("token invalido. ascii: %c, valor: %d\n",c,(int)c);
 		}
 	}
-	printf("ID DO TOKEN:%d POSICAO: %d TAMANHO: %d\n",tipo, posicao, tamanho);
+	//printf("ID DO TOKEN:%d POSICAO: %d TAMANHO: %d LINHA: %d \n",tipo, posicao, tamanho, dizLinhaOriginal(contaLinha));
 	posicaoAbsoluta = stringInput + posicao;
 	return tamanho;
 }
