@@ -27,8 +27,10 @@ int dizLinhaOriginal(int linha){
 	return linhaOriginal;
 }
 
-//bool verificaSeEhSecaoText(int linha){	//se nao for, significa que eh data
-//}
+bool verificaSeEhSecaoText(int linha){	//se nao for, significa que eh data
+	if (linha>nLinhasText){
+	}
+}
 
 void erroLexico(Token *token, int *posicao){
 	printf("%d erro lexico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
@@ -88,6 +90,11 @@ void reestruturaSections(char *texto){
 		}
 		if (token.tipo == TEXT){
 			ordemCorreta = true;
+			while(token.tipo != SECTION && token.tipo != FIM_DE_STR){
+				//tamanhoText = posicao;	//quando sair deste loop vai conter o valor correto se tiver tudo certo.
+				nLinhasText = token.leLinhaAtual();
+				posicao += token.leUmToken(texto, posicao);
+			}
 		}
 		else if(token.tipo == DATA){
 			//le secao de dados ate encontrar sessao text

@@ -108,8 +108,8 @@ int Token::leUmToken(char *stringInput, int inicio){
 	tamanho = 0;
 	if (c>='A' && c<='Z' || c == '_'){	
 		//tipo texto -> podem suceder numeros
-		tamanho++;
-		c = stringInput[posicao];
+		//tamanho++;
+		//c = stringInput[posicao];
 		while ((c>='A' && c<='Z' )||(c>='0' && c<='9' )|| c == '_'){
 			c = stringInput[posicao+(++tamanho)];
 		}
@@ -162,7 +162,7 @@ int Token::leUmToken(char *stringInput, int inicio){
 				//printf("token invalido. ascii: %c, valor: %d\n",c,(int)c);
 		}
 	}
-//	printf("ID DO TOKEN:%d POSICAO: %d TAMANHO: %d\n",tipo, posicao, tamanho);
+	printf("ID DO TOKEN:%d POSICAO: %d TAMANHO: %d\n",tipo, posicao, tamanho);
 	posicaoAbsoluta = stringInput + posicao;
 	return tamanho;
 }
