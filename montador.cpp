@@ -8,6 +8,7 @@
 
 int nLinhasText = 0, nLinhasData = 0;
 bool ordemCorreta = false;
+int mostrarErroLexico = false;
 
 int dizLinhaOriginal(int linha){
 	int  linhaOriginal;
@@ -74,7 +75,6 @@ void reestruturaSections(char *texto){
 	//texto[++i] = '\n';
 	//texto[++i] = '\0';
 	printf("REESTRUTURANDO:\n\n");
-
 	posicao += token.leUmToken(texto, posicao);
 	while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO){
 		posicao += token.leUmToken(texto, posicao);
@@ -145,7 +145,7 @@ void reestruturaSections(char *texto){
 typedef struct Simbolo{
 	//char string[100];		//texto do simbolo
 	Token token;
-	int valor, isDef, lista, definidoNaLinha, isConst, isConst0;
+	int valor, isDef, lista, definidoNaLinha, isConst, isConst0, tamanho;
 } TabelaSimbolos;
 
 int monta(char *texto, int *programa){
@@ -189,7 +189,7 @@ int monta(char *texto, int *programa){
 				//continue;
 			}
 		}
-		if (token.tipo == PALAVRA){	//nesse caso acho que so pode ser declaracao de rotulo(label)
+		else if (token.tipo == PALAVRA){	//nesse caso acho que so pode ser declaracao de rotulo(label)
 
 			rotulo = token;
 			posicao += token.leUmToken(texto, posicao);
@@ -237,7 +237,8 @@ int monta(char *texto, int *programa){
 					tabelaDeSimbolos[tamanhoTabela].lista = -1;
 					tabelaDeSimbolos[tamanhoTabela].valor = cursorExecutavel;
 					tabelaDeSimbolos[tamanhoTabela].definidoNaLinha = token.leLinhaAtual();
-					//verifica se eh const
+					tabelaDeSimbolos[tamanhoTabela].tamanho = 0;	//inicializa so					
+					//verifica se eh const e verifica se tem tamanho tipo label: space 4
 					tokenAuxiliar = token;
 					posicaoAuxiliar = posicao;
 					do{
@@ -245,6 +246,7 @@ int monta(char *texto, int *programa){
 					}while(tokenAuxiliar.tipo == ESPACO || tokenAuxiliar.tipo == QUEBRA_DE_LINHA);
 					if (tokenAuxiliar.tipo == CONST){
 						tabelaDeSimbolos[tamanhoTabela].isConst = true;
+						tabelaDeSimbolos[tamanhoTabela].tamanho = 1;
 						// verifica se eh 0
 						do{
 							posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
@@ -255,6 +257,19 @@ int monta(char *texto, int *programa){
 					}
 					else{
 						tabelaDeSimbolos[tamanhoTabela].isConst = false;
+					}
+					if (tokenAuxiliar.tipo == SPACE){
+						do{
+							posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+						}while(tokenAuxiliar.tipo == ESPACO || tokenAuxiliar.tipo == QUEBRA_DE_LINHA);
+						if (tokenAuxiliar.tipo == NUMERO){
+							//le numero e atribui a tamanho da label
+							tokenAuxiliar.copiaTokenParaString(buffer);
+							tabelaDeSimbolos[tamanhoTabela].tamanho = atoi(buffer);
+						}
+						else {
+							tabelaDeSimbolos[tamanhoTabela].tamanho = 1;
+						}
 					}
 					tamanhoTabela++;
 				}
@@ -269,6 +284,7 @@ int monta(char *texto, int *programa){
 					// a partir daqui i eh o indice do simbolo em questao
 					tabelaDeSimbolos[i].valor = cursorExecutavel;
 					tabelaDeSimbolos[i].definidoNaLinha = token.leLinhaAtual();
+					tabelaDeSimbolos[i].tamanho = 0;	//inicializa so					
 					//verifica se eh const
 					tokenAuxiliar = token;
 					posicaoAuxiliar = posicao;
@@ -278,6 +294,7 @@ int monta(char *texto, int *programa){
 					//tabelaDeSimbolos[i].isConst = token.tipo == CONST? true : false;
 					if (tokenAuxiliar.tipo == CONST){
 						tabelaDeSimbolos[i].isConst = true;
+						tabelaDeSimbolos[i].tamanho = 1;
 						do{
 							posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
 						}while(tokenAuxiliar.tipo == ESPACO || tokenAuxiliar.tipo == QUEBRA_DE_LINHA);	
@@ -287,6 +304,19 @@ int monta(char *texto, int *programa){
 					}
 					else{
 						tabelaDeSimbolos[i].isConst = false;
+					}
+					if (tokenAuxiliar.tipo == SPACE){
+						do{
+							posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+						}while(tokenAuxiliar.tipo == ESPACO || tokenAuxiliar.tipo == QUEBRA_DE_LINHA);
+						if (tokenAuxiliar.tipo == NUMERO){
+							//le numero e atribui a tamanho da label
+							tokenAuxiliar.copiaTokenParaString(buffer);
+							tabelaDeSimbolos[i].tamanho = atoi(buffer);
+						}
+						else {
+							tabelaDeSimbolos[i].tamanho = 1;
+						}
 					}
 					
 				}else{
@@ -306,7 +336,7 @@ int monta(char *texto, int *programa){
 			}
 		}
 		// ###########	INSTRUCOES DE UM OPERANDO	###########
-		if (token.tipo >= ADD && token.tipo <= OUTPUT && token.tipo != COPY){	// sao todas as instruncoes com um operando
+		else if (token.tipo >= ADD && token.tipo <= OUTPUT && token.tipo != COPY){	// sao todas as instruncoes com um operando
 			operando = token;
 			posicao += token.leUmToken(texto,posicao);
 			while(token.tipo == ESPACO || token.tipo == TABULACAO) {	//ignora tabs e espacos entre instrucao e operando
@@ -368,13 +398,21 @@ int monta(char *texto, int *programa){
 					tamanhoTabela++;
 				}
 				// verifica se eh ...+NUMERO
-				posicao += token.leUmToken(texto,posicao);
-				if(token.tipo == MAIS){
-					//le numero a seguir e copia para a tabela adicionaAoEndereco na posicao do executavel
-					posicao += token.leUmToken(texto,posicao);
-					if (token.tipo == NUMERO){
-						token.copiaTokenParaString(buffer);
-						 adicionaAoEndereco[cursorExecutavel-1]= atoi(buffer);
+				if(operando.tipo < JMP || operando.tipo > JMPZ){
+					posicaoAuxiliar = posicao;
+					tokenAuxiliar = token;
+					posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+					if(tokenAuxiliar.tipo == MAIS){
+						token = tokenAuxiliar;
+						posicao = posicaoAuxiliar;
+						//le numero a seguir e copia para a tabela adicionaAoEndereco na posicao do executavel
+						posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+						if (tokenAuxiliar.tipo == NUMERO){
+							tokenAuxiliar.copiaTokenParaString(buffer);
+							adicionaAoEndereco[cursorExecutavel-1]= atoi(buffer);
+							token = tokenAuxiliar;
+							posicao = posicaoAuxiliar;
+						}
 					}
 				}
 			}
@@ -390,7 +428,7 @@ int monta(char *texto, int *programa){
 		}
 		// ###########	FIM INSTRUCOES DE UM OPERANDO	###########
 		// ###########	INSTRUCOES DE DOIS OPERANDOS (COPY)	###########
-		if (token.tipo == COPY){	// sao todas as instruncoes com um operando
+		else if (token.tipo == COPY){	// sao todas as instruncoes com um operando
 			operando = token;
 			posicao += token.leUmToken(texto,posicao);
 			while(token.tipo == ESPACO || token.tipo == TABULACAO) {	//ignora tabs e espacos entre instrucao e operando
@@ -565,12 +603,12 @@ int monta(char *texto, int *programa){
 			}
 		}
 		// ###########	FIM INSTRUCOES DE DOIS OPERANDOS	###########
-		if (token.tipo == STOP){
+		else if (token.tipo == STOP){
 			programa[cursorExecutavel] = token.tipo;
 			cursorExecutavel++;
 			//printf("!!!!!!!!!  %d  !!!!!!!!!!!!!!\n\n", token.tipo);
 		}
-		if (token.tipo == SPACE){
+		else if (token.tipo == SPACE){
 			//se for seguido de um numero n, escreve n zeros na memoria,
 			//se nao for seguido de nada, escreve um zero na memoria
 			posicao += token.leUmToken(texto, posicao);
@@ -592,7 +630,7 @@ int monta(char *texto, int *programa){
 				cursorExecutavel++;
 			}
 		}
-		if (token.tipo == CONST){
+		else if (token.tipo == CONST){
 			//le proximo token e escreve no programa
 			posicao += token.leUmToken(texto, posicao);
 			while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO) {
@@ -605,8 +643,11 @@ int monta(char *texto, int *programa){
 				cursorExecutavel++;
 			}
 		}
+		else{
+			erroSintatico(&token,&posicao);
+		}
+		
 	}
-	
 	for(i=0;i<TAMANHO_MAX_ARQUIVO_EXECUTAVEL; i++) {	//adiciona NUMERO ao valor de memoria em LABEL+NUMERO
 		programa[i]+=adicionaAoEndereco[i];
 	}
@@ -614,7 +655,7 @@ int monta(char *texto, int *programa){
 	printf("\n\nTABELA DE SIMBOLOS:\n");
 	for(i=0;i<tamanhoTabela;i++){
 		tabelaDeSimbolos[i].token.copiaTokenParaString(buffer);
-		printf("token: %s isDef: %d lista: %d defNaLinha: %d isConst:%d isCt0 %d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista,tabelaDeSimbolos[i].definidoNaLinha,tabelaDeSimbolos[i].isConst,tabelaDeSimbolos[i].isConst0);
+		printf("token: %s isDef:%d lista:%d defNaLinha:%d isConst:%d isCt0:%d tamanho:%d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista,tabelaDeSimbolos[i].definidoNaLinha,tabelaDeSimbolos[i].isConst,tabelaDeSimbolos[i].isConst0,tabelaDeSimbolos[i].tamanho);
 		
 	}
 
@@ -628,13 +669,14 @@ int monta(char *texto, int *programa){
 			do {				
 				posicao+=token.leUmToken(texto,posicao);
 				if(tabelaDeSimbolos[i].token.comparaToken(token)){
-					erroSintatico(&token,&posicao);
+					erroSemantico(&token,&posicao);
 				}
 			}while(token.tipo != FIM_DE_STR);
 		}
 	}
 
 	//verifica se ha saltos para secoes invalidas
+	mostrarErroLexico = true;
 	token.atribuiContaLinha(1);
 	posicao = 0;
 	do {				
@@ -686,6 +728,21 @@ int monta(char *texto, int *programa){
 						}
 					}
 				}
+				// a partir daqui i contem o indice do token em questao na tabela
+				//verifica se tem +NUMERO e ve se eh valido
+				tokenAuxiliar = token;
+				posicaoAuxiliar = posicao;
+				posicaoAuxiliar = +tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+				if(tokenAuxiliar.tipo==MAIS){
+					posicaoAuxiliar = +tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+					if(tokenAuxiliar.tipo == NUMERO){
+						tokenAuxiliar.copiaTokenParaString(buffer);
+						if(atoi(buffer)>=tabelaDeSimbolos[i].tamanho){
+							//erro, espaco nao reservado para variavel
+							erroSemantico(&token,&posicao);
+						}
+					}
+				}
 			}
 		}
 		else if (token.tipo == DIV){
@@ -699,11 +756,44 @@ int monta(char *texto, int *programa){
 						erroSemantico(&token,&posicao);
 					}
 				}
+			}	
+		}
+		if (token.tipo >= ADD && token.tipo <= STOP){
+			if (token.leLinhaAtual()>nLinhasText){
+				//erro, fora da secao text
+				erroSemantico(&token,&posicao);
 			}
-			
+			do {			
+				posicao+=token.leUmToken(texto,posicao);
+			} while(token.tipo == ESPACO || token.tipo == TABULACAO);
+			for(i=0;i<tamanhoTabela;i++){
+				if(tabelaDeSimbolos[i].token.comparaToken(token)){
+					if (tabelaDeSimbolos[i].definidoNaLinha<=nLinhasText){
+						//ERRO, argumento invalido
+						erroSemantico(&token,&posicao);
+					}
+					break;			
+				}
+			}
+			// a partir daqui i contem o indice do token em questao na tabela
+			//verifica se tem +NUMERO e ve se eh valido
+			tokenAuxiliar = token;
+			posicaoAuxiliar = posicao;
+			posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+			if(tokenAuxiliar.tipo==MAIS){
+				posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+				tokenAuxiliar.copiaTokenParaString(buffer);
+				if(tokenAuxiliar.tipo == NUMERO){
+					tokenAuxiliar.copiaTokenParaString(buffer);
+					if(atoi(buffer)>=tabelaDeSimbolos[i].tamanho){
+						//erro, espaco nao reservado para variavel
+						erroSemantico(&token,&posicao);
+					}
+				}
+			}
 		}
 	}while(token.tipo != FIM_DE_STR);
-	
+	mostrarErroLexico = false;
 
 	printf("\n\n"); 
 	for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);

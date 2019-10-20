@@ -8,5 +8,6 @@ int monta(char *texto, int *executavel);	//retorna tamanho do executavel
 void reestruturaSections(char *texto);
 void erroLexico(Token *token, int *posicao);
 int dizLinhaOriginal(int linha);
+extern int mostrarErroLexico;
 
 #endif

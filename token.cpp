@@ -104,7 +104,8 @@ int descobreToken(char *inicioString, int tamanho){
 
 int Token::leUmToken(char *stringInput, int inicio){
 	posicao = inicio;
-	char c = stringInput[posicao];
+	char 	c = stringInput[posicao],
+			c2 = stringInput[posicao+1];
 	tamanho = 0;
 	if (c>='A' && c<='Z' || c == '_'){	
 		//tipo texto -> podem suceder numeros
@@ -115,7 +116,7 @@ int Token::leUmToken(char *stringInput, int inicio){
 		}
 		tipo = descobreToken(stringInput+inicio, tamanho);
 	}
-	else if (c>='0' && c<='9'){
+	else if ((c>='0' && c<='9') || (c=='-' && c2>='0' && c2<='9')){
 		while (c>='0' && c<='9' ){	//varre os proximos digitos pra saber tamanho
 			c = stringInput[posicao+(++tamanho)];
 		}
@@ -157,7 +158,7 @@ int Token::leUmToken(char *stringInput, int inicio){
 				break;
 			default:
 				tipo = INVALIDO;
-				printf("%d erro lexico\n", dizLinhaOriginal(contaLinha));
+				if(mostrarErroLexico) printf("%d erro lexico\n", dizLinhaOriginal(contaLinha));
 				tamanho++;
 				//printf("token invalido. ascii: %c, valor: %d\n",c,(int)c);
 		}

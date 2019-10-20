@@ -97,18 +97,37 @@ void preProcessa(char *string, int tamanho){
 		}
 	}
 
-/*	//remove enters desnecessarios
-	while(programa[0]=='\n'){
-		removeCaracteres(programa,1);	//remove \n a frente
+	//remove enters tabs e espacos desnecessarios
+	i=0;
+	while(string[i] == '\n' || string[i] == '\t' || string[i] == ' '){
+		removeCaracteres(string,1);	//remove \n a frente
 	}
-	for(i=0; i<tamanhoArquivo; i++){
-		if (programa[i] == '\n'){
-			while(programa[i+1]=='\n'){
-				removeCaracteres(programa+i+1,1);	//remove \n a frente
+	for(i=0; i<tamanho; i++){
+		if (string[i] == '\n'){
+			while(string[i+1] == '\n' || string[i+1] == '\t' || string[i+1] == ' '){
+				removeCaracteres(string+i+1,1);	//remove \n a frente
+			}
+		}
+		else if(string[i] == '\t'){
+			if(string[i+1] == '\n'){
+				removeCaracteres(string+i,1);	//remove \t
+				i--;
+			}
+			else while(string[i+1] == ' ' || string[i+1] == '\t'){
+				removeCaracteres(string+i+1,1);	//remove caractere à frente
+			}
+		}
+		else if(string[i] == ' '){
+			if(string[i+1] == '\n'){
+				removeCaracteres(string+i,1);	//remove ' '
+				i--;
+			}
+			else while(string[i+1] == ' ' || string[i+1] == '\t'){
+				removeCaracteres(string+i+1,1);	//remove caractere à frente
 			}
 		}
 	}
-*/
+
 
 	printf("\n\n%s\n",string);
 	
