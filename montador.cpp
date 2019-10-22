@@ -4,7 +4,7 @@
 #include <string.h>
 //#include "erros.h"
 
-#define TAMANHO_BUFFER_SECTION 1024
+#define TAMANHO_BUFFER_SECTION 1048576 // 2^20 ~ 1mb se char
 
 int nLinhasText = 0, nLinhasData = 0;
 bool ordemCorreta = false;
@@ -52,7 +52,7 @@ void reestruturaSections(char *texto){
 	Token token, prevToken;
 	int posicao = 0, posicaoText = 0, posicaoData = 0, tamanhoData = 0;
 
-	printf("\n INICIO\n");
+	//printf("\n INICIO\n");
 
 /*	posicao += token.leUmToken(texto, posicao);
 	while(token.tipo != FIM_DE_STR){
@@ -74,7 +74,7 @@ void reestruturaSections(char *texto){
 	}
 	//texto[++i] = '\n';
 	//texto[++i] = '\0';
-	printf("REESTRUTURANDO:\n\n");
+	//printf("REESTRUTURANDO:\n\n");
 	posicao += token.leUmToken(texto, posicao);
 	while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO){
 		posicao += token.leUmToken(texto, posicao);
@@ -137,7 +137,7 @@ void reestruturaSections(char *texto){
 			erroSemantico(&token,&posicao);
 		}
 	}
-	printf("aiosdjdaoisjdoasijd\n%s\nnLinhasData: %d, nLinhasText: %d, total de linhas: %d, prevToken: %d, posicao: %d\n",texto,nLinhasData, nLinhasText, token.leLinhaAtual(),prevToken.tipo,posicao);
+	//printf("aiosdjdaoisjdoasijd\n%s\nnLinhasData: %d, nLinhasText: %d, total de linhas: %d, prevToken: %d, posicao: %d\n",texto,nLinhasData, nLinhasText, token.leLinhaAtual(),prevToken.tipo,posicao);
 	
 	
 }
@@ -593,13 +593,15 @@ int monta(char *texto, int *programa){
 				}
 				else{	//ERRO nao encontrou um segundo argumento valido
 					//erroSintatico(&token,&posicao);
+					//while(texto[posicao]!='\n' || texto[posicao]!='\0') posicao++;
 					//continue;
 				}
 			}
 			else{
 				//ERRO, nao achou virgula entre os argumentos
-				//erroSintatico(&token,&posicao);
-				//continue;
+				erroSintatico(&token,&posicao);
+				while(texto[posicao]!='\n' && texto[posicao]!='\0') posicao++;
+				continue;
 			}
 		}
 		// ###########	FIM INSTRUCOES DE DOIS OPERANDOS	###########
@@ -652,12 +654,11 @@ int monta(char *texto, int *programa){
 		programa[i]+=adicionaAoEndereco[i];
 	}
 
-	printf("\n\nTABELA DE SIMBOLOS:\n");
-	for(i=0;i<tamanhoTabela;i++){
-		tabelaDeSimbolos[i].token.copiaTokenParaString(buffer);
-		printf("token: %s isDef:%d lista:%d defNaLinha:%d isConst:%d isCt0:%d tamanho:%d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista,tabelaDeSimbolos[i].definidoNaLinha,tabelaDeSimbolos[i].isConst,tabelaDeSimbolos[i].isConst0,tabelaDeSimbolos[i].tamanho);
-		
-	}
+	//printf("\n\nTABELA DE SIMBOLOS:\n");
+	//for(i=0;i<tamanhoTabela;i++){
+	//	tabelaDeSimbolos[i].token.copiaTokenParaString(buffer);
+	//	printf("token: %s isDef:%d lista:%d defNaLinha:%d isConst:%d isCt0:%d tamanho:%d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista,tabelaDeSimbolos[i].definidoNaLinha,tabelaDeSimbolos[i].isConst,tabelaDeSimbolos[i].isConst0,tabelaDeSimbolos[i].tamanho);
+	//}
 
 	//verifica se todos os simbolos da tabela de simbolos foram definidos
 
@@ -795,9 +796,9 @@ int monta(char *texto, int *programa){
 	}while(token.tipo != FIM_DE_STR);
 	mostrarErroLexico = false;
 
-	printf("\n\n"); 
-	for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);
-	printf("\n");
+	//printf("\n\n"); 
+	//for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);
+	//printf("\n");
 
 
 	return cursorExecutavel;

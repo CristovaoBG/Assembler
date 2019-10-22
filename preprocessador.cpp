@@ -129,7 +129,7 @@ void preProcessa(char *string, int tamanho){
 	}
 
 
-	printf("\n\n%s\n",string);
+	//printf("\n\n%s\n",string);
 	
 	//Processa os EQUs
 	while(string[posicao]!='\0'){
@@ -161,7 +161,7 @@ void preProcessa(char *string, int tamanho){
 						char rotuloStr[100],valorEquStr[100];
 						rotulo.copiaTokenParaString(rotuloStr);
 						valorEqu.copiaTokenParaString(valorEquStr);
-						printf("estrutura de EQU encontrada. Rotulo: %s Valor: %s\n",rotuloStr,valorEquStr);		
+						//printf("estrutura de EQU encontrada. Rotulo: %s Valor: %s\n",rotuloStr,valorEquStr);		
 						//varre o texto substituindo os caracteres da string à frente
 						substituiEqu(string + posicao,rotuloStr,valorEquStr);
 						apagaLinha(string+posicaoAuxiliar);
@@ -202,7 +202,7 @@ void preProcessa(char *string, int tamanho){
 			}
 		}
 	}
-	printf("\nsegue:\n%s\n",string);
+	//printf("\nsegue:\n%s\n",string);
 
 }
 
