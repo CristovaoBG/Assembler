@@ -2,7 +2,7 @@
 #include "montador.h"
 #include <string.h>
 
-#define NUM_TOKENS 31
+#define NUM_TOKENS 35
 
 struct Lista{
 	Token *token;
@@ -62,12 +62,13 @@ bool comparaTokens(Token t1, Token t2){
 }
 
 int descobreToken(char *inicioString, int tamanho){
+	if (tamanho > 8) return PALAVRA;	// se for maior que oito entao so pode ser uma palavra
 	int i, j;
 	//sao 19 tokens textuais conhecidos, o maior deles apresenta 7 caracteres + FIM_STR = 8 caractreres
 	char tokenStrings[NUM_TOKENS][8];
 	//limpa lixo de tokenStrings;
 	for (i = 0; i< 8; i++) for (j=0; j<NUM_TOKENS; j++)tokenStrings[j][i] = '\0';
-	
+
 	//define tabela de strings de tokens
 	strcpy(&tokenStrings[ADD][0],"ADD");
 	strcpy(&tokenStrings[SUB][0],"SUB");
@@ -90,8 +91,10 @@ int descobreToken(char *inicioString, int tamanho){
 	strcpy(&tokenStrings[IF][0],"IF");
 	strcpy(&tokenStrings[DATA][0],"DATA");
 	strcpy(&tokenStrings[TEXT][0],"TEXT");
-
-	if (tamanho > 8) return PALAVRA;	// se for maior que oito entao so pode ser uma palavra
+	strcpy(&tokenStrings[BEGIN][0],"BEGIN");
+	strcpy(&tokenStrings[END][0],"END");
+	strcpy(&tokenStrings[PUBLIC][0],"PUBLIC");
+	strcpy(&tokenStrings[EXTERN][0],"EXTERN");
 	
 //	printf("_____________%d__________\n",tamanho);
 	for (i=0; i<NUM_TOKENS; i++){
