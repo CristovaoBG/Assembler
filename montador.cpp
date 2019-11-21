@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "token.h"
 #include "montador.h"
+#include "preprocessador.h"
 #include <string.h>
 //#include "erros.h"
 
@@ -34,16 +35,21 @@ bool verificaSeEhSecaoText(int linha){	//se nao for, significa que eh data
 }
 
 void erroLexico(Token *token, int *posicao){
+#ifdef MOSTRA_ERROS	
 	printf("%d erro lexico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
+#endif
 }
 
 void erroSemantico(Token *token,int *posicao){
+#ifdef MOSTRA_ERROS
 	printf("%d erro semantico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
+#endif
 }
 
 void erroSintatico(Token *token,int *posicao){
-	//printf("%d erro sintatico, posicao %d\n", token->leLinhaAtual(), *posicao);
+#ifdef MOSTRA_ERROS
 	printf("%d erro sintatico\n", dizLinhaOriginal(token->leLinhaAtual()), *posicao);
+#endif
 }
 
 void reestruturaSections(char *texto){
@@ -149,12 +155,15 @@ typedef struct Simbolo{
 } TabelaSimbolos;
 
 int monta(char *texto, int *programa){
+	char tabelaDeUso[2048], tabelaDeDefinicoes[2048], simbolosPublicos[2048], simbolosExternos[2048];
+	tabelaDeUso[0]='\0'; tabelaDeDefinicoes[0] = '\0'; simbolosPublicos[0] = '\0'; simbolosExternos[0] = '\0';
 	Token token, operando, rotulo, tokenAuxiliar;
 	char buffer[100], buffer2[100];
 	int posicao = 0, posicaoAuxiliar, valorToken, i, j, contaLinha = 1;
 	int cursorExecutavel = 0;
 //	int programa[TAMANHO_MAX_ARQUIVO_EXECUTAVEL];
 	bool naTabela = false;
+	bool achouBegin = false, achouEnd = false, ehExtern = false;
 
 	Simbolo tabelaDeSimbolos[TAMANHO_MAX_TABELA_DE_SIMBOLOS];
 	int tamanhoTabela = 0;
@@ -223,7 +232,27 @@ int monta(char *texto, int *programa){
 				}
 				token = tokenAuxiliar;
 
-				// procura
+				//verifica se proxima diretiva eh extern
+				posicaoAuxiliar = posicao;
+				ehExtern = false;
+				do{
+					posicaoAuxiliar += tokenAuxiliar.leUmToken(texto,posicaoAuxiliar);
+				}while(tokenAuxiliar.tipo == ESPACO ||tokenAuxiliar.tipo ==  QUEBRA_DE_LINHA ||tokenAuxiliar.tipo == TABULACAO);
+				if (tokenAuxiliar.tipo == EXTERN){
+					//adiciona na tabela de uso//////////////////////////////////////////////////////////////////////////////////////////////////
+					rotulo.copiaTokenParaString(buffer);
+					for(i=0; simbolosExternos[i]!='\0'; i++); //vai para o fim da str
+					strcpy(simbolosExternos+i,buffer); // copia rotulo
+					for(i=0; simbolosExternos[i]!='\0'; i++); //vai para o fim da str
+					simbolosExternos[i] = ' ';
+					simbolosExternos[++i] = '\0';
+					ehExtern = true;
+					posicao = posicaoAuxiliar;	//atualiza na posicao
+					token = tokenAuxiliar;		//atualiza na posicao
+					//printf("WHAT??\n\n");
+				}
+
+				// ve se ta na tabela ou nao
 				naTabela = false;
 				for(i = 0; i < tamanhoTabela; i++){
 					if(comparaTokens(rotulo,tabelaDeSimbolos[i].token)){
@@ -232,6 +261,7 @@ int monta(char *texto, int *programa){
 					}
 				}
 				if(!naTabela){	//se nao tiver na tabela, cria e define
+					if(!ehExtern){
 					tabelaDeSimbolos[tamanhoTabela].token = rotulo;
 					tabelaDeSimbolos[tamanhoTabela].isDef = true;
 					tabelaDeSimbolos[tamanhoTabela].lista = -1;
@@ -272,7 +302,7 @@ int monta(char *texto, int *programa){
 						}
 					}
 					tamanhoTabela++;
-				}
+				}}
 				else if(!tabelaDeSimbolos[i].isDef){	//se tiver na tabela varre a lista e define
 					//printf(" E ELA TA NA TABELA DE SIMBOLOS UAU\n");					
 					tabelaDeSimbolos[i].isDef = true;
@@ -645,6 +675,26 @@ int monta(char *texto, int *programa){
 				cursorExecutavel++;
 			}
 		}
+		else if (token.tipo == BEGIN){
+			achouBegin = true;
+		}
+		else if (token.tipo == END){
+			achouEnd = true;
+		}
+		else if (token.tipo == PUBLIC){
+			posicao += token.leUmToken(texto, posicao);
+			while(token.tipo == QUEBRA_DE_LINHA || token.tipo == ESPACO || token.tipo == TABULACAO) {
+				posicaoAuxiliar = posicao;
+				posicao += token.leUmToken(texto,posicao);
+			}
+			token.copiaTokenParaString(buffer);
+			// adiciona na tabela de definicoes
+			for(i=0; simbolosPublicos[i]!= '\0'; i++);
+			strcpy(simbolosPublicos+i, buffer);
+			// copia valor para tabela
+			for(i=0; simbolosPublicos[i]!= '\0'; i++);
+			simbolosPublicos[i] = ' '; i++ ;	//insere espaco
+		}
 		else{
 			erroSintatico(&token,&posicao);
 		}
@@ -654,26 +704,12 @@ int monta(char *texto, int *programa){
 		programa[i]+=adicionaAoEndereco[i];
 	}
 
-	//printf("\n\nTABELA DE SIMBOLOS:\n");
-	//for(i=0;i<tamanhoTabela;i++){
-	//	tabelaDeSimbolos[i].token.copiaTokenParaString(buffer);
-	//	printf("token: %s isDef:%d lista:%d defNaLinha:%d isConst:%d isCt0:%d tamanho:%d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista,tabelaDeSimbolos[i].definidoNaLinha,tabelaDeSimbolos[i].isConst,tabelaDeSimbolos[i].isConst0,tabelaDeSimbolos[i].tamanho);
-	//}
-
-	//verifica se todos os simbolos da tabela de simbolos foram definidos
-
-	for(i=0; i< tamanhoTabela; i++){
-		if (!tabelaDeSimbolos[i].isDef){
-			token.atribuiContaLinha(1);
-			posicao = 0;
-			//varre arquivo de texto imprimindo as posicoes onde o rotulo nao definido foi usado
-			do {				
-				posicao+=token.leUmToken(texto,posicao);
-				if(tabelaDeSimbolos[i].token.comparaToken(token)){
-					erroSemantico(&token,&posicao);
-				}
-			}while(token.tipo != FIM_DE_STR);
-		}
+	if (numeroDeArquivosFornecidos == 1){
+		if (achouBegin || achouEnd) printf("Erro: BEGIN e END so sao usadas quando sao fornecidos dois arquivos de entrada.\n");
+	}
+	else {
+		if (!achouBegin) printf("Erro: diretiva BEGIN nao encontrada.\n");
+		if (!achouEnd) printf("Erro: diretiva END nao encontrada.\n");
 	}
 
 	//verifica se ha saltos para secoes invalidas
@@ -796,11 +832,110 @@ int monta(char *texto, int *programa){
 	}while(token.tipo != FIM_DE_STR);
 	mostrarErroLexico = false;
 
+
+	//cria tabela de definicao
+	posicao = 0;
+	tabelaDeDefinicoes[0] = '\0';
+	posicao+=token.leUmToken(simbolosPublicos,posicao);
+	while (token.tipo != FIM_DE_STR){
+		int valor = 0;
+		//procura na tabela de simbolos
+		for(i=0;i<tamanhoTabela;i++){
+			if(tabelaDeSimbolos[i].token.comparaToken(token)){
+				valor = tabelaDeSimbolos[i].valor;
+				//escreve na tabela de definicoes
+				token.copiaTokenParaString(buffer);
+				// adiciona na tabela de definicoes
+				for(i=0; tabelaDeDefinicoes[i]!= '\0'; i++);
+				strcpy(tabelaDeDefinicoes+i, buffer);
+				// poe espaco e valor
+				for(i=0; tabelaDeDefinicoes[i]!= '\0'; i++);
+				tabelaDeDefinicoes[i] = ' '; i++;
+				sprintf(&tabelaDeDefinicoes[i],"%d ",valor);
+				printf("!!!!!!!!!!!");
+				break;
+			}
+		}			
+		posicao+=token.leUmToken(simbolosPublicos,posicao);	
+	}
+
+	//cria tabela de uso
+	strcpy(tabelaDeUso,simbolosExternos);
+	i=strlen(tabelaDeUso);
+
+	//varre tabela de simbolos e olha os simbolos externos
+	for(i=0; i<tamanhoTabela; i++){
+		if (tabelaDeSimbolos[i].lista != -1){
+			//verifica se está na lista de simbolos externos
+			posicao = 0;
+			bool achouExtern = false;
+			do{
+				posicao += token.leUmToken(simbolosExternos,posicao);
+				if(tabelaDeSimbolos[i].token.comparaToken(token)){
+					achouExtern = true;
+					tabelaDeSimbolos[i].isDef = true;	
+					//varre lista e cria tabela
+					j = tabelaDeSimbolos[i].lista;	// j eh um cursor
+					buffer[0] = '\0';
+					while (j != -1){
+						//printf("%d ",j);
+						sprintf(buffer+strlen(buffer)," %d",j);
+						j = programa[j];
+					}
+					printf("\n\n");
+					printf(buffer);
+					//acha na tabela e coloca valores ao lado
+					posicaoAuxiliar = 0;
+					do{
+						posicaoAuxiliar += tokenAuxiliar.leUmToken(tabelaDeUso,posicaoAuxiliar);
+						if (tokenAuxiliar.comparaToken(tabelaDeSimbolos[i].token)){	//achou
+							insereStringNaPosicao(tabelaDeUso+posicaoAuxiliar,buffer);
+							break;
+						}
+					}while(tokenAuxiliar.tipo != FIM_DE_STR);
+					//return 0;
+				}
+			}while(token.tipo != FIM_DE_STR);
+			//break;
+		}
+	}
+
+/*
+						j = tabelaDeSimbolos[i].lista;	// j = item da lista
+						tabelaDeSimbolos[i].lista = programa[j];	//tabela de simbolos vira item seguinte
+						programa[j] = cursorExecutavel;
+*/
+
+
+	//verifica se todos os simbolos da tabela de simbolos foram definidos
+	for(i=0; i< tamanhoTabela; i++){
+		if (!tabelaDeSimbolos[i].isDef){
+			token.atribuiContaLinha(1);
+			posicao = 0;
+			//varre arquivo de texto imprimindo as posicoes onde o rotulo nao definido foi usado
+			do {				
+				posicao+=token.leUmToken(texto,posicao);
+				if(tabelaDeSimbolos[i].token.comparaToken(token)){
+					erroSemantico(&token,&posicao);
+				}
+			}while(token.tipo != FIM_DE_STR);
+		}
+	}	
+
+	printf("\n\nTABELA DE SIMBOLOS:\n");
+	for(i=0;i<tamanhoTabela;i++){
+		tabelaDeSimbolos[i].token.copiaTokenParaString(buffer);
+		printf("token: %s isDef:%d lista:%d defNaLinha:%d isConst:%d isCt0:%d tamanho:%d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista,tabelaDeSimbolos[i].definidoNaLinha,tabelaDeSimbolos[i].isConst,tabelaDeSimbolos[i].isConst0,tabelaDeSimbolos[i].tamanho);
+	}
+
+
 	//printf("\n\n"); 
 	//for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);
 	//printf("\n");
 
-
+	printf("OK!!\n%s\n",tabelaDeDefinicoes);
+	printf("OK!!\n%s\n",simbolosExternos);
+	printf("OK!!\n%s\n",tabelaDeUso);
 	return cursorExecutavel;
 }
 

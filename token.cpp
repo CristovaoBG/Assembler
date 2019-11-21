@@ -161,7 +161,9 @@ int Token::leUmToken(char *stringInput, int inicio){
 				break;
 			default:
 				tipo = INVALIDO;
+#ifdef MOSTRA_ERROS
 				if(mostrarErroLexico) printf("%d erro lexico\n", dizLinhaOriginal(contaLinha));
+#endif
 				tamanho++;
 				//printf("token invalido. ascii: %c, valor: %d\n",c,(int)c);
 		}
