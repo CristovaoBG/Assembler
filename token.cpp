@@ -41,6 +41,12 @@ void Token::atribuiContaLinha(int valor){
 	contaLinha = valor;
 }
 
+int Token::leNumero(){
+	char buffer[256];
+	this->copiaTokenParaString(buffer);
+	return atoi(buffer);
+}
+
 
 void Token::copiaTokenParaString(char *destino){
 	int i;

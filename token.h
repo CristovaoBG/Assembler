@@ -3,9 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 //#define MOSTRA_ERROS
-
 typedef struct Lista Lista;	//para uso interno
 
 enum token_enum{	// a posicao das instrucoes equivale ao codgo delas, portanto nao mudar a ordem das que tem codigo
@@ -57,6 +55,7 @@ class Token {
 		int posicao;			//posicao do texto relativa ao inicio da string
 		int leUmToken(char *string, int posicao); //retorna tamanho textual do token
 		char* posicaoAbsoluta;	//posicao do texto referente ao inicio da memoria
+		int leNumero(); //retorna numero se for numero
 		bool comparaToken(Token token);
 		void copiaTokenParaString(char *destino); 
 		Token();

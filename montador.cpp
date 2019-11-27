@@ -154,8 +154,9 @@ typedef struct Simbolo{
 	int valor, isDef, lista, definidoNaLinha, isConst, isConst0, tamanho;
 } TabelaSimbolos;
 
-int monta(char *texto, int *programa){
-	char tabelaDeUso[2048], tabelaDeDefinicoes[2048], simbolosPublicos[2048], simbolosExternos[2048];
+int monta(char *texto, int *programa, char *tabelaDeDefinicoes, char *tabelaDeUso, int* bitmapRealocacao){
+	//char tabelaDeUso[2048], tabelaDeDefinicoes[2048]
+	char simbolosPublicos[2048], simbolosExternos[2048];
 	tabelaDeUso[0]='\0'; tabelaDeDefinicoes[0] = '\0'; simbolosPublicos[0] = '\0'; simbolosExternos[0] = '\0';
 	Token token, operando, rotulo, tokenAuxiliar;
 	char buffer[100], buffer2[100];
@@ -170,6 +171,11 @@ int monta(char *texto, int *programa){
 	// obs: acrescentar nova fileira de inteiros especificando a linha do codigo ocorrido para caso o label nao esteja definido exeibir a posicao
 	int adicionaAoEndereco[TAMANHO_MAX_ARQUIVO_EXECUTAVEL];		//tabela que registra o numero NUMERO em LABEL+NUMERO a ser adicionado no final de todo o processo
 	for(i=0;i<TAMANHO_MAX_ARQUIVO_EXECUTAVEL; i++) adicionaAoEndereco[i] = 0;
+
+	//limpa bitmap de realocacao
+	for (i=0;i<TAMANHO_BITMAP_REALOCACAO; i++){
+		bitmapRealocacao[i]=0;
+	}
 
 	while(texto[posicao]!='\0'){
 		posicaoAuxiliar = posicao;	//grava posicao
@@ -378,11 +384,7 @@ int monta(char *texto, int *programa){
 				cursorExecutavel++;
 				token.copiaTokenParaString(buffer);
 				programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int
-				//if (operando.tipo == DIV && programa[cursorExecutavel] == 0){
-					//ERRO DE DIVISAO POR ZERO (TA ERRADO, EH SE FOR CTT)
-					//erroSintatico(&token,&posicao);
-					//continue;
-				//}
+				bitmapRealocacao[cursorExecutavel] = 1;
 				cursorExecutavel++;
 			}else if (token.tipo == PALAVRA){
 				//printf("comando de um arg. tipo: %d\n", operando.tipo);
@@ -405,6 +407,7 @@ int monta(char *texto, int *programa){
 						programa[cursorExecutavel] = operando.tipo;	//o tipo eh o proprio codigo pq eu fui esperto ou eu fui burro nao sei ainda
 						cursorExecutavel++;
 						programa[cursorExecutavel] = tabelaDeSimbolos[i].valor; // insere valor do label no executavel
+						bitmapRealocacao[cursorExecutavel] = 1;
 						cursorExecutavel++;	
 					}
 					else{	//se simbolo esta na tabela mas nao esta definido 
@@ -413,6 +416,7 @@ int monta(char *texto, int *programa){
 						// insere na lista
 						programa[cursorExecutavel] = tabelaDeSimbolos[i].lista;
 						tabelaDeSimbolos[i].lista = cursorExecutavel; // insere valor do label no executavel
+						bitmapRealocacao[cursorExecutavel] = 1;
 						cursorExecutavel++;	
 					}
 				}
@@ -424,6 +428,7 @@ int monta(char *texto, int *programa){
 					tabelaDeSimbolos[tamanhoTabela].isDef = false;
 					tabelaDeSimbolos[tamanhoTabela].lista = cursorExecutavel;	//indica que eh o primeiro elemento da lista
 					programa[cursorExecutavel] = -1;
+					bitmapRealocacao[cursorExecutavel] = 1;
 					cursorExecutavel++;
 					tamanhoTabela++;
 				}
@@ -470,6 +475,7 @@ int monta(char *texto, int *programa){
 				cursorExecutavel++;
 				token.copiaTokenParaString(buffer);
 				programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int
+				bitmapRealocacao[cursorExecutavel] = 1;
 				cursorExecutavel++;				
 				//prigrama[cursorExecutavel] = 
 			}else if (token.tipo == PALAVRA){
@@ -493,6 +499,7 @@ int monta(char *texto, int *programa){
 						programa[cursorExecutavel] = operando.tipo;	//o tipo eh o proprio codigo pq eu fui esperto ou eu fui burro nao sei ainda
 						cursorExecutavel++;
 						programa[cursorExecutavel] = tabelaDeSimbolos[i].valor; // insere valor do label no executavel
+						bitmapRealocacao[cursorExecutavel] = 1;
 						cursorExecutavel++;	
 					}
 					else{	//se simbolo esta na tabela mas nao esta definido 
@@ -501,6 +508,7 @@ int monta(char *texto, int *programa){
 						// insere na lista
 						programa[cursorExecutavel] = tabelaDeSimbolos[i].lista;
 						tabelaDeSimbolos[i].lista = cursorExecutavel; // insere valor do label no executavel
+						bitmapRealocacao[cursorExecutavel] = 1;
 						cursorExecutavel++;	
 					}
 				}
@@ -512,6 +520,7 @@ int monta(char *texto, int *programa){
 					tabelaDeSimbolos[tamanhoTabela].isDef = false;
 					tabelaDeSimbolos[tamanhoTabela].lista = cursorExecutavel;	//indica que eh o primeiro elemento da lista
 					programa[cursorExecutavel] = -1;
+					bitmapRealocacao[cursorExecutavel] = 1;
 					cursorExecutavel++;
 					tamanhoTabela++;
 				}
@@ -551,9 +560,6 @@ int monta(char *texto, int *programa){
 				posicao += token.leUmToken(texto,posicao);
 				//le numero ou label ou label+NUMERO
 				if (token.tipo == NUMERO){
-					//insere instrucao e operando no programa executavel.
-					programa[cursorExecutavel] = operando.tipo;	//o tipo eh o proprio codigo pq eu fui esperto ou eu fui burro nao sei ainda
-					cursorExecutavel++;
 					token.copiaTokenParaString(buffer);
 					programa[cursorExecutavel] = atoi(buffer);	//atoi eh de uma biblioteca incluida, serve pra converter de string pra int
 					cursorExecutavel++;				
@@ -577,6 +583,7 @@ int monta(char *texto, int *programa){
 					if(naTabela){
 						if (tabelaDeSimbolos[i].isDef){
 							programa[cursorExecutavel] = tabelaDeSimbolos[i].valor; // insere valor do label no executavel
+							bitmapRealocacao[cursorExecutavel] = 1;
 							cursorExecutavel++;	
 						}
 
@@ -584,6 +591,7 @@ int monta(char *texto, int *programa){
 							// insere na lista
 							programa[cursorExecutavel] = tabelaDeSimbolos[i].lista;
 							tabelaDeSimbolos[i].lista = cursorExecutavel; // insere valor do label no executavel
+							bitmapRealocacao[cursorExecutavel] = 1;
 							cursorExecutavel++;	
 						}
 					}
@@ -593,6 +601,7 @@ int monta(char *texto, int *programa){
 						tabelaDeSimbolos[tamanhoTabela].isDef = false;
 						tabelaDeSimbolos[tamanhoTabela].lista = cursorExecutavel;	//indica que eh o primeiro elemento da lista
 						programa[cursorExecutavel] = -1;
+						bitmapRealocacao[cursorExecutavel] = 1;
 						cursorExecutavel++;
 						tamanhoTabela++;
 					}
@@ -852,7 +861,7 @@ int monta(char *texto, int *programa){
 				for(i=0; tabelaDeDefinicoes[i]!= '\0'; i++);
 				tabelaDeDefinicoes[i] = ' '; i++;
 				sprintf(&tabelaDeDefinicoes[i],"%d ",valor);
-				printf("!!!!!!!!!!!");
+				//printf("!!!!!!!!!!!");
 				break;
 			}
 		}			
@@ -877,13 +886,17 @@ int monta(char *texto, int *programa){
 					//varre lista e cria tabela
 					j = tabelaDeSimbolos[i].lista;	// j eh um cursor
 					buffer[0] = '\0';
+					int temp;
 					while (j != -1){
 						//printf("%d ",j);
 						sprintf(buffer+strlen(buffer)," %d",j);
+						temp = j;
+						//programa[j] = tabelaDeSimbolos[i].valor; //atribui valor adicional a posicao de endereco
 						j = programa[j];
+						programa[temp] = adicionaAoEndereco[temp]; //atribui valor adicional a posicao de endereco
 					}
-					printf("\n\n");
-					printf(buffer);
+					//printf("\n\n");
+					//printf(buffer);
 					//acha na tabela e coloca valores ao lado
 					posicaoAuxiliar = 0;
 					do{
@@ -899,6 +912,13 @@ int monta(char *texto, int *programa){
 			//break;
 		}
 	}
+
+	for(i = 0; i<cursorExecutavel; i++){
+		if(programa[i] == -1 && bitmapRealocacao[i] == 1){	//se endereco for negativo e for posicao relativa quer dizer que a posicao
+			
+		}
+	}
+
 
 /*
 						j = tabelaDeSimbolos[i].lista;	// j = item da lista
@@ -920,22 +940,26 @@ int monta(char *texto, int *programa){
 				}
 			}while(token.tipo != FIM_DE_STR);
 		}
-	}	
+	}
 
-	printf("\n\nTABELA DE SIMBOLOS:\n");
+
+	/*
+printf("\n\nTABELA DE SIMBOLOS:\n");
 	for(i=0;i<tamanhoTabela;i++){
 		tabelaDeSimbolos[i].token.copiaTokenParaString(buffer);
 		printf("token: %s isDef:%d lista:%d defNaLinha:%d isConst:%d isCt0:%d tamanho:%d\n",buffer,tabelaDeSimbolos[i].isDef,tabelaDeSimbolos[i].lista,tabelaDeSimbolos[i].definidoNaLinha,tabelaDeSimbolos[i].isConst,tabelaDeSimbolos[i].isConst0,tabelaDeSimbolos[i].tamanho);
 	}
-
+	*/
 
 	//printf("\n\n"); 
 	//for(j=0;j<cursorExecutavel; j++) printf("%d ",programa[j]);
 	//printf("\n");
 
-	printf("OK!!\n%s\n",tabelaDeDefinicoes);
-	printf("OK!!\n%s\n",simbolosExternos);
-	printf("OK!!\n%s\n",tabelaDeUso);
+	//cria tabela de realocacao
+
+	printf("Tabela de definicoes: \n%s\n",tabelaDeDefinicoes);
+	//printf("\n%s\n",simbolosExternos);
+	printf("Tabelade uso: \n%s\n",tabelaDeUso);
 	return cursorExecutavel;
 }
 

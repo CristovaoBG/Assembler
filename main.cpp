@@ -39,6 +39,8 @@ int montaArquivo(char *nomeDoArquivo){
 	char nomeBuffer[100];
 	char programa[TAMANHO_MAXIMO_ARQUIVO];
 	int	 executavel[TAMANHO_MAXIMO_ARQUIVO];
+	char tabelaDeUso[2048], tabelaDeDefinicoes[2048];
+	int bitmapRealocacao[TAMANHO_BITMAP_REALOCACAO];
 
 	int tamanhoArquivo = 0;
 	FILE *file = NULL;
@@ -70,14 +72,29 @@ int montaArquivo(char *nomeDoArquivo){
 	//restrutura na forma SECTION TEXT seguida de SECTION DATA
 	reestruturaSections(programa);
 	//monta
-	tamanhoExecutavel = monta(programa, executavel);
+	tamanhoExecutavel = monta(programa, executavel,tabelaDeUso, tabelaDeDefinicoes, bitmapRealocacao);
 	//salva arquivo.obj
 	strcpy(nomeBuffer, nomeDoArquivo);
 	adicionaExtensao(nomeBuffer,".obj");
 	arquivoExecutavel = fopen(nomeBuffer,"w");
+	//imprime nome do arquivo
+	strcpy(nomeBuffer, nomeDoArquivo);
+	adicionaExtensao(nomeBuffer,"");
+	fprintf(arquivoExecutavel,"%s\n",nomeBuffer);
+	//imprime tamanho do executavel
+	fprintf(arquivoExecutavel,"%d\n",tamanhoExecutavel);
+	//imprime bitmap de realocacao;
+	for(i=0; i<tamanhoExecutavel;i++){
+		fprintf(arquivoExecutavel,"%d",bitmapRealocacao[i]);
+	}
+	//imprime tabela de uso
+	fprintf(arquivoExecutavel,"\n%s\n",tabelaDeUso);
+	//imprime executavel;
 	for(i = 0; i<tamanhoExecutavel; i++){
 		fprintf(arquivoExecutavel,"%d ",executavel[i]);
 	}
+	//imprime tabela de definicoes
+	fprintf(arquivoExecutavel,"\n%s",tabelaDeDefinicoes);
 
 	return 1;
 }
