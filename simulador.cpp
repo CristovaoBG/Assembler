@@ -1,5 +1,5 @@
 #include <stdio.h>
-#define TAMANHO_MAXIMO_ARQUIVO 1024
+#define TAMANHO_MAXIMO_ARQUIVO 2048
 
 void rodaPrograma(int , int *);
 
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
 	
 	//tamanhoArquivo = fread(programa,sizeof(char),TAMANHO_MAXIMO_ARQUIVO,file);
 	fscanf(file,"%d",programa);
-	while (!feof(file) && tamanhoArquivo < 1024){
+	while (!feof(file) && tamanhoArquivo < 2048){
 		//printf ("%d", i);
 		tamanhoArquivo++;
 		fscanf (file, "%d", programa+tamanhoArquivo); 

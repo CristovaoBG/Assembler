@@ -709,9 +709,6 @@ int monta(char *texto, int *programa, char *tabelaDeDefinicoes, char *tabelaDeUs
 		}
 		
 	}
-	for(i=0;i<TAMANHO_MAX_ARQUIVO_EXECUTAVEL; i++) {	//adiciona NUMERO ao valor de memoria em LABEL+NUMERO
-		programa[i]+=adicionaAoEndereco[i];
-	}
 
 	if (numeroDeArquivosFornecidos == 1){
 		if (achouBegin || achouEnd) printf("Erro: BEGIN e END so sao usadas quando sao fornecidos dois arquivos de entrada.\n");
@@ -893,7 +890,8 @@ int monta(char *texto, int *programa, char *tabelaDeDefinicoes, char *tabelaDeUs
 						temp = j;
 						//programa[j] = tabelaDeSimbolos[i].valor; //atribui valor adicional a posicao de endereco
 						j = programa[j];
-						programa[temp] = adicionaAoEndereco[temp]; //atribui valor adicional a posicao de endereco
+						//programa[temp] = adicionaAoEndereco[temp]; //atribui valor adicional a posicao de endereco
+						programa[temp] = 0;
 					}
 					//printf("\n\n");
 					//printf(buffer);
@@ -918,6 +916,12 @@ int monta(char *texto, int *programa, char *tabelaDeDefinicoes, char *tabelaDeUs
 			
 		}
 	}
+
+	// adiciona valores lido em LABEL+[VALOR]
+	for(i=0;i<TAMANHO_MAX_ARQUIVO_EXECUTAVEL; i++) {	//adiciona NUMERO ao valor de memoria em LABEL+NUMERO
+		programa[i]+=adicionaAoEndereco[i];
+	}
+
 
 
 /*
