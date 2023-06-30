@@ -7,3 +7,5 @@ assembler
 simulador
 montador
 codigo.asm
+.gitignore
+.*

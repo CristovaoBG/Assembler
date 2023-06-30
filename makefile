@@ -1,24 +1,19 @@
 .PHONY: simulador all montador
 
 COMPILLER= g++
+MAIN = src/main.cpp
+SIMULADOR = src/simulador.cpp
+PREPROCESSADOR = src/preprocessador.cpp
+MONTADOR = src/montador.cpp
 
-MAIN = main.cpp
-
-SIMULADOR = simulador.cpp
-
-PREPROCESSADOR = preprocessador.cpp
-
-MONTADOR = montador.cpp
-
-MAIN = main.cpp
-
+MAIN = src/main.cpp
 COMPILLER_FLAGS= -w -Wall
 
 EXEC_NAME = assembler
-
 SIM_NAME = simulador
-
 MON_NAME = montador
+
+HEADERDIR = headers
 
 all: token preprocessador montador main limpa
 
@@ -26,19 +21,19 @@ all: token preprocessador montador main limpa
 #	$(COMPILLER) $(MAIN) -Wall $(COMPILLER_FLAGS) -o $(EXEC_NAME) 
 
 simulador: 
-	$(COMPILLER) $(SIMULADOR) $(COMPILLER_FLAGS) -o $(SIM_NAME)
+	$(COMPILLER) $(SIMULADOR) $(COMPILLER_FLAGS) -o $(SIM_NAME) -I$(HEADERDIR)
 
 main:
-	$(COMPILLER) token.o preprocessador.o montador.o $(MAIN) $(COMPILLER_FLAGS) -o $(MON_NAME)
+	$(COMPILLER) token.o preprocessador.o montador.o $(MAIN) $(COMPILLER_FLAGS) -o $(MON_NAME) -I$(HEADERDIR) 
 
 token:
-	$(COMPILLER) token.cpp $(COMPILLER_FLAGS) -c 
+	$(COMPILLER) src/token.cpp $(COMPILLER_FLAGS) -I$(HEADERDIR) -c
 
 montador:
-	$(COMPILLER) $(MONTADOR) $(COMPILLER_FLAGS) -c
+	$(COMPILLER) $(MONTADOR) $(COMPILLER_FLAGS) -I$(HEADERDIR)  -c
 
 preprocessador:
-	$(COMPILLER) $(PREPROCESSADOR) $(COMPILLER_FLAGS) -c
+	$(COMPILLER) $(PREPROCESSADOR) $(COMPILLER_FLAGS) -I$(HEADERDIR)  -c
 
 limpa:
 	rm *.o
